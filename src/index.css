@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;700;800;900&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Skyglass (light) */
+  --bg: #F6FAFF;
+  --surface: #FFFFFF;
+  --surface-2: #EEF6FF;
+  --surface-3: #E3F0FF;
+  
+  --font-heading: 'Outfit', 'Inter', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+  
+  --text: #0B1220;
+  --text-dim: #42536B;
+  --hairline: rgba(11, 18, 32, 0.10);
+
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(11, 18, 32, 0.10);
+  --glass-strong-bg: rgba(255, 255, 255, 0.82);
+  --glass-strong-border: rgba(11, 18, 32, 0.14);
+  
+  /* Green accent values as default */
+  --accent: #39FF14;
+  --accent-rgb: 57, 255, 20;
+  --accent-glow: rgba(57, 255, 20, 0.35);
+  --accent-glow-rgb: 57, 255, 20;
+  --on-accent: #0B1220;
+}
+
+[data-accent="purple"] {
+  --accent: #A855F7;
+  --accent-rgb: 168, 85, 247;
+  --accent-glow: rgba(168, 85, 247, 0.35);
+  --accent-glow-rgb: 168, 85, 247;
+  --on-accent: #FFFFFF;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  color-scheme: light;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(11, 18, 32, 0.06);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(11, 18, 32, 0.22);
+  border-radius: 4px;
+  border: 2px solid rgba(11, 18, 32, 0.06);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb), 0.3);
+}
+
+/* Design System Utilities */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.glass-strong {
+  background: var(--glass-strong-bg);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--glass-strong-border);
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--text) 35%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section {
+  padding: 10rem 2rem;
+  min-height: 100vh;
+  position: relative;
+  border-bottom: 1px solid var(--hairline);
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 6rem 1.25rem;
+  }
+}
+
+/* Shimmer Animation for skeletons */
+@keyframes shimmer {
+  0% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.6s ease-in-out infinite;
+}

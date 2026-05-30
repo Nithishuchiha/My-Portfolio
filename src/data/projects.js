@@ -1,0 +1,138 @@
+const projects = [
+  // ── Web Dev ──
+  {
+    id: 1,
+    title: "Portfolio V2",
+    description: "A cinematic, animation-rich developer portfolio built with React, Framer Motion, GSAP, and tsParticles. Features 3D card stacks, neon cursor trails, and particle text effects.",
+    category: "webdev",
+    tech: ["React", "Framer Motion", "GSAP", "Tailwind"],
+    image: "/hero/hero-1.jpeg",
+    link: "#",
+    github: "#",
+  },
+  {
+    id: 2,
+    title: "E-Commerce Dashboard",
+    description: "Full-stack dashboard with real-time analytics, inventory management, and order tracking. Built with Next.js and PostgreSQL with role-based access control.",
+    category: "webdev",
+    tech: ["Next.js", "PostgreSQL", "Prisma", "Chart.js"],
+    image: "/hero/hero-2.png",
+    link: "#",
+    github: "#",
+  },
+  {
+    id: 3,
+    title: "Real-Time Chat App",
+    description: "WebSocket-powered chat application with end-to-end encryption, file sharing, and video calling support. Features a modern glassmorphism UI.",
+    category: "webdev",
+    tech: ["React", "Socket.io", "Node.js", "WebRTC"],
+    image: "/hero/hero-3.png",
+    link: "#",
+    github: "#",
+  },
+
+  // ── Automation ──
+  {
+    id: 4,
+    title: "CI/CD Pipeline Generator",
+    description: "Automated pipeline creator that generates GitHub Actions workflows from project analysis. Supports multi-language projects with test, build, and deploy stages.",
+    category: "automation",
+    tech: ["Python", "GitHub Actions", "Docker", "YAML"],
+    image: "/hero/hero-4.jpeg",
+    link: "#",
+    github: "#",
+  },
+  {
+    id: 5,
+    title: "Web Scraper Suite",
+    description: "Distributed scraping framework with proxy rotation, CAPTCHA solving, and structured data extraction. Handles JavaScript-rendered pages with Playwright.",
+    category: "automation",
+    tech: ["Python", "Playwright", "Redis", "FastAPI"],
+    image: "/hero/hero-1.jpeg",
+    link: "#",
+    github: "#",
+  },
+  {
+    id: 6,
+    title: "Smart Home Controller",
+    description: "IoT automation hub that connects smart devices, learns usage patterns, and creates intelligent routines. Includes voice control and mobile app.",
+    category: "automation",
+    tech: ["Python", "MQTT", "React Native", "TensorFlow Lite"],
+    image: "/hero/hero-2.png",
+    link: "#",
+    github: "#",
+  },
+
+  // ── AI ──
+  {
+    id: 7,
+    title: "AI Code Reviewer",
+    description: "LLM-powered code review assistant that analyzes pull requests for bugs, security vulnerabilities, and performance issues. Integrates with GitHub and GitLab.",
+    category: "ai",
+    tech: ["Python", "LangChain", "GPT-4", "FastAPI"],
+    image: "/hero/hero-3.png",
+    link: "#",
+    github: "#",
+  },
+  {
+    id: 8,
+    title: "Image Style Transfer",
+    description: "Neural style transfer application that transforms photos into artwork inspired by famous painters. Real-time processing with GPU acceleration.",
+    category: "ai",
+    tech: ["Python", "PyTorch", "Flask", "CUDA"],
+    image: "/hero/hero-4.jpeg",
+    link: "#",
+    github: "#",
+  },
+  {
+    id: 9,
+    title: "Sentiment Analyzer",
+    description: "Multi-language sentiment analysis tool for social media monitoring. Provides real-time dashboard with trend analysis and alert system.",
+    category: "ai",
+    tech: ["Python", "Transformers", "Streamlit", "Plotly"],
+    image: "/hero/hero-1.jpeg",
+    link: "#",
+    github: "#",
+  },
+
+  // ── Design ──
+  {
+    id: 10,
+    title: "Glassmorphism UI Kit",
+    description: "Comprehensive design system featuring 50+ glassmorphism components. Includes dark/light modes, adaptive colors, and smooth micro-animations.",
+    category: "design",
+    tech: ["Figma", "CSS", "React", "Storybook"],
+    image: "/hero/hero-2.png",
+    link: "#",
+    github: "#",
+  },
+  {
+    id: 11,
+    title: "Brand Identity System",
+    description: "Complete brand identity package including logo, typography, color system, iconography, and motion design guidelines for a tech startup.",
+    category: "design",
+    tech: ["Figma", "After Effects", "Illustrator", "Lottie"],
+    image: "/hero/hero-3.png",
+    link: "#",
+    github: "#",
+  },
+  {
+    id: 12,
+    title: "3D Product Showcase",
+    description: "Interactive 3D product visualization with configurable materials, lighting, and camera angles. Built with Three.js and React Three Fiber.",
+    category: "design",
+    tech: ["Three.js", "R3F", "Blender", "GSAP"],
+    image: "/hero/hero-4.jpeg",
+    link: "#",
+    github: "#",
+  },
+];
+
+export default projects;
+
+export const categories = [
+  { key: "webdev",     label: "Web Dev",    color: "#39FF14", iconColor: "#39FF14", icon: "webdev" },
+  { key: "ai",         label: "AI",         color: "#60A5FA", iconColor: "#60A5FA", icon: "ai" },
+  { key: "automation", label: "Automation", color: "#FBBF24", iconColor: "#FBBF24", icon: "automation" },
+  { key: "design",     label: "Design",     color: "#A855F7", iconColor: "#A855F7", icon: "design" },
+];
