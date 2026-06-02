@@ -23,10 +23,10 @@ const supportsImageBitmap = typeof createImageBitmap === 'function';
 const CATEGORY_CARDS = categories.map((cat) => {
   const count = projectData.filter((p) => p.category === cat.key).length;
   const taglines = {
-    webdev:     'Full-stack applications & client sites',
-    learning:   'DSA, Spring Boot & course projects',
-    automation: 'Scripts, bots & productivity tools',
-    design:     'Portfolios, UI kits & animations',
+    webdev: 'Full-stack applications & dashboards',
+    ai: 'Machine learning & intelligent systems',
+    automation: 'Pipelines, scrapers & IoT',
+    design: 'UI kits, branding & 3D visuals',
   };
   return {
     ...cat,
