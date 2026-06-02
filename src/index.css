@@ -45,6 +45,13 @@ html, body {
   scroll-behavior: smooth;
 }
 
+/* Hide native cursor on desktop; CustomCursor.jsx provides the GSAP cursor */
+@media (pointer: fine) {
+  *, *::before, *::after {
+    cursor: none !important;
+  }
+}
+
 body {
   margin: 0;
   background: var(--bg);

@@ -5,7 +5,7 @@ import projectData, { categories } from '../../data/projects';
 // Card gradient backgrounds — one per category
 const CARD_GRADIENTS = {
   webdev:     ['linear-gradient(135deg,#0f2027,#203a43,#2c5364)', 'linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)', 'linear-gradient(135deg,#0d1b2a,#1b4332,#081c15)'],
-  ai:         ['linear-gradient(135deg,#0a0a2e,#1a1a4e,#2d2d7e)', 'linear-gradient(135deg,#020024,#090979,#00d4ff)', 'linear-gradient(135deg,#0f0c29,#302b63,#24243e)'],
+  learning:   ['linear-gradient(135deg,#0a0a2e,#1a1a4e,#2d2d7e)', 'linear-gradient(135deg,#020024,#090979,#00d4ff)', 'linear-gradient(135deg,#0f0c29,#302b63,#24243e)'],
   automation: ['linear-gradient(135deg,#2c1810,#4a1c0c,#8b3a00)', 'linear-gradient(135deg,#1a0a00,#3d1c00,#7a3800)', 'linear-gradient(135deg,#16030a,#3b0015,#6b002a)'],
   design:     ['linear-gradient(135deg,#1a0030,#2e0060,#4b0082)', 'linear-gradient(135deg,#0d0030,#1a0058,#33007f)', 'linear-gradient(135deg,#200040,#3a0070,#5c0099)'],
 };

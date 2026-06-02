@@ -1,40 +1,59 @@
-import { useRef, useEffect } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useEffect, useRef, useState } from 'react';
 
-gsap.registerPlugin(ScrollTrigger);
+const CONTACT = {
+  email: 'nithishperumalofficial@gmail.com',
+  linkedin: 'https://www.linkedin.com/in/nithish-perumal/',
+  github: 'https://github.com/Nithishuchiha',
+  resumePath: '/resume.pdf',
+  phoneDisplay: '+91 95667 43095',
+  // Leave null until you decide to publish a real number.
+  // Example: 'tel:+919876543210'
+  phoneTel: 'tel:+919566743095',
+};
 
-const SOCIAL_LINKS = [
-  { label: 'GitHub', url: 'https://github.com', icon: '⌘' },
-  { label: 'LinkedIn', url: 'https://linkedin.com', icon: '◆' },
-  { label: 'Twitter', url: 'https://twitter.com', icon: '✦' },
-  { label: 'Email', url: 'mailto:hello@example.com', icon: '✉' },
-];
+
+async function copyText(text) {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // fall through
+  }
+
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
 export default function Footer() {
   const sectionRef = useRef(null);
   const curtainRef = useRef(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    const section = sectionRef.current;
-    const curtain = curtainRef.current;
-    if (!section || !curtain) return;
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 1400);
+    return () => window.clearTimeout(t);
+  }, [toast]);
 
-    const ctx = gsap.context(() => {
-      gsap.to(curtain, {
-        yPercent: -100,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: section,
-          start: 'top bottom',
-          end: 'top 20%',
-          scrub: 1,
-        },
-      });
-    }, section);
-
-    return () => ctx.revert();
-  }, []);
+  const handleCopyPhone = async () => {
+    const ok = await copyText(CONTACT.phoneDisplay);
+    setToast(ok ? 'Copied phone number' : 'Copy failed');
+  };
 
   return (
     <section
@@ -51,26 +70,62 @@ export default function Footer() {
         borderTop: '1px solid var(--hairline)',
       }}
     >
-      {/* Curtain overlay */}
+      {/* ── Image background ────────────────────────────────────────────── */}
       <div
-        ref={curtainRef}
+        aria-hidden="true"
         style={{
           position: 'absolute',
           inset: 0,
-          background:
-            'linear-gradient(180deg, rgba(246,250,255,0.15) 0%, rgba(246,250,255,0.48) 60%, rgba(246,250,255,0.68) 100%)',
-          zIndex: 10,
+          zIndex: 0,
+          overflow: 'hidden',
           pointerEvents: 'none',
         }}
-      />
+      >
+        {/* The background image itself */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: 'url(/about/ezgif-frame-003.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center top',
+            filter: 'saturate(1.15) contrast(1.05) brightness(0.92)',
+          }}
+        />
 
+        {/* Soft vignette so the glass card pops */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(246,250,255,0.10) 0%, rgba(246,250,255,0.55) 65%, rgba(246,250,255,0.80) 100%)',
+          }}
+        />
+
+        {/* Accent colour tint from above */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'radial-gradient(1000px 500px at 50% 0%, rgba(var(--accent-rgb), 0.08) 0%, transparent 60%)',
+          }}
+        />
+      </div>
       {/* Footer content */}
       <div
+        className="glass-strong"
         style={{
           position: 'relative',
-          zIndex: 5,
+          zIndex: 20,
           textAlign: 'center',
-          maxWidth: '600px',
+          maxWidth: '760px',
+          width: '100%',
+          borderRadius: '24px',
+          padding: 'clamp(1.6rem, 4vw, 2.6rem)',
+          boxShadow:
+            '0 0 0 1px rgba(255,255,255,0.45), 0 22px 70px rgba(7,129,245,0.18), 0 18px 50px rgba(11,18,32,0.12)',
         }}
       >
         <h2
@@ -97,7 +152,7 @@ export default function Footer() {
           Feel free to reach out!
         </p>
 
-        {/* Social links */}
+        {/* CTAs */}
         <div
           style={{
             display: 'flex',
@@ -107,42 +162,254 @@ export default function Footer() {
             flexWrap: 'wrap',
           }}
         >
-          {SOCIAL_LINKS.map((link) => (
-            <a
-              key={link.label}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="glass"
+          <a
+            href={`mailto:${CONTACT.email}`}
+            className="glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.55rem',
+              padding: '0.78rem 1.35rem',
+              borderRadius: '999px',
+              textDecoration: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              background: 'var(--accent)',
+              color: 'var(--on-accent)',
+              boxShadow: '0 0 22px var(--accent-glow)',
+              borderColor: 'rgba(var(--accent-rgb), 0.35)',
+              transition: 'transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.filter = 'brightness(1.02)';
+              e.currentTarget.style.boxShadow = '0 0 28px var(--accent-glow)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.filter = 'none';
+              e.currentTarget.style.boxShadow = '0 0 22px var(--accent-glow)';
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: '1.05rem' }}>✉</span>
+            Email
+          </a>
+
+          <a
+            href={CONTACT.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.55rem',
+              padding: '0.78rem 1.25rem',
+              borderRadius: '999px',
+              textDecoration: 'none',
+              color: 'var(--text)',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              transition: 'all 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.color = 'var(--accent)';
+              e.currentTarget.style.boxShadow = '0 0 20px var(--accent-glow)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--glass-border)';
+              e.currentTarget.style.color = 'var(--text)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: '1.05rem' }}>◆</span>
+            LinkedIn
+          </a>
+
+          <a
+            href={CONTACT.resumePath}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.55rem',
+              padding: '0.78rem 1.25rem',
+              borderRadius: '999px',
+              textDecoration: 'none',
+              color: 'var(--text)',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              transition: 'all 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.color = 'var(--accent)';
+              e.currentTarget.style.boxShadow = '0 0 20px var(--accent-glow)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--glass-border)';
+              e.currentTarget.style.color = 'var(--text)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: '1.05rem' }}>⬇</span>
+            Resume
+          </a>
+
+          <a
+            href={CONTACT.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.55rem',
+              padding: '0.78rem 1.25rem',
+              borderRadius: '999px',
+              textDecoration: 'none',
+              color: 'var(--text)',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              transition: 'all 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.color = 'var(--accent)';
+              e.currentTarget.style.boxShadow = '0 0 20px var(--accent-glow)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--glass-border)';
+              e.currentTarget.style.color = 'var(--text)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: '1.05rem' }}>⌘</span>
+            GitHub
+          </a>
+
+          <div
+            className="glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.55rem',
+              padding: '0.4rem 0.65rem 0.4rem 1.05rem',
+              borderRadius: '999px',
+              color: 'var(--text)',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              userSelect: 'none',
+            }}
+            title={CONTACT.phoneTel ? 'Call' : 'Phone number not published yet'}
+            aria-label="Phone number"
+          >
+            <span aria-hidden="true" style={{ fontSize: '1.05rem', opacity: CONTACT.phoneTel ? 1 : 0.6 }}>☎</span>
+            <span style={{ opacity: CONTACT.phoneTel ? 1 : 0.72 }}>{CONTACT.phoneDisplay}</span>
+
+            {/* Call action (disabled until phoneTel is set) */}
+            {CONTACT.phoneTel ? (
+              <a
+                href={CONTACT.phoneTel}
+                style={{
+                  marginLeft: '0.25rem',
+                  padding: '0.38rem 0.6rem',
+                  borderRadius: '999px',
+                  border: '1px solid rgba(11,18,32,0.12)',
+                  textDecoration: 'none',
+                  color: 'var(--text)',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  background: 'rgba(255,255,255,0.55)',
+                }}
+              >
+                Call
+              </a>
+            ) : (
+              <span
+                aria-hidden="true"
+                style={{
+                  marginLeft: '0.25rem',
+                  padding: '0.38rem 0.6rem',
+                  borderRadius: '999px',
+                  border: '1px solid rgba(11,18,32,0.10)',
+                  color: 'rgba(11,18,32,0.45)',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  background: 'rgba(255,255,255,0.45)',
+                }}
+              >
+                Call
+              </span>
+            )}
+
+            {/* Copy action (enabled even for placeholder as requested) */}
+            <button
+              type="button"
+              onClick={handleCopyPhone}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.7rem 1.3rem',
+                marginLeft: '0.15rem',
+                width: '36px',
+                height: '36px',
                 borderRadius: '999px',
-                textDecoration: 'none',
+                border: '1px solid rgba(11,18,32,0.12)',
+                background: 'rgba(255,255,255,0.55)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 color: 'var(--text)',
-                fontSize: '0.85rem',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--accent)';
-                e.currentTarget.style.color = 'var(--accent)';
-                e.currentTarget.style.boxShadow = '0 0 20px var(--accent-glow)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 0 18px var(--accent-glow)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--glass-border)';
-                e.currentTarget.style.color = 'var(--text)';
+                e.currentTarget.style.borderColor = 'rgba(11,18,32,0.12)';
                 e.currentTarget.style.boxShadow = 'none';
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
+              aria-label="Copy phone number"
+              title="Copy"
             >
-              <span style={{ fontSize: '1.1rem' }}>{link.icon}</span>
-              {link.label}
-            </a>
-          ))}
+              ⧉
+            </button>
+          </div>
+        </div>
+
+        {/* Toast */}
+        <div
+          aria-live="polite"
+          style={{
+            minHeight: '1.2rem',
+            marginTop: '-1.75rem',
+            marginBottom: '1.75rem',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '0.72rem',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: toast ? 'rgba(11,18,32,0.55)' : 'transparent',
+            transition: 'color 0.2s ease',
+          }}
+        >
+          {toast || ' '}
         </div>
 
         {/* Divider */}

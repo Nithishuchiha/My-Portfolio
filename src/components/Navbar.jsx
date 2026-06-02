@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import useScrollSpy from '../hooks/useScrollSpy';
+import { firePageTransition } from './PageTransition';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home' },
@@ -14,6 +15,7 @@ export default function Navbar() {
   const [visible, setVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const lastScrollY = useRef(0);
+  const transitionInFlightRef = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,12 +34,23 @@ export default function Navbar() {
   }, []);
 
   const scrollTo = (id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
+    if (transitionInFlightRef.current) return;
+    transitionInFlightRef.current = true;
 
-    // Account for fixed navbar so headings don't land under it.
-    const y = el.getBoundingClientRect().top + window.scrollY - 100;
-    window.scrollTo({ top: y, behavior: 'smooth' });
+    firePageTransition(() => {
+      const el = document.getElementById(id);
+      if (el) {
+        // Jump instantly while the wipe covers the screen.
+        // Account for fixed navbar so headings don't land under it.
+        const y = el.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({ top: y, behavior: 'auto' });
+      }
+
+      // Allow another click shortly after the wipe starts clearing.
+      window.setTimeout(() => {
+        transitionInFlightRef.current = false;
+      }, 450);
+    });
   };
 
   return (

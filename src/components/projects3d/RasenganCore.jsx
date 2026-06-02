@@ -7,13 +7,13 @@ import * as THREE from 'three';
  * Built entirely from Three.js geometries (no extra deps needed).
  */
 export default function RasenganCore() {
-  const coreRef   = useRef();
-  const ring1Ref  = useRef();
-  const ring2Ref  = useRef();
-  const ring3Ref  = useRef();
-  const ring4Ref  = useRef();
-  const ring5Ref  = useRef();
-  const outerRef  = useRef();
+  const coreRef = useRef();
+  const ring1Ref = useRef();
+  const ring2Ref = useRef();
+  const ring3Ref = useRef();
+  const ring4Ref = useRef();
+  const ring5Ref = useRef();
+  const outerRef = useRef();
   const spiralRef = useRef();
 
   useFrame((_, delta) => {
@@ -198,7 +198,7 @@ export default function RasenganCore() {
 
       {/* ── Point lights inside the orb for scene illumination ── */}
       <pointLight color="#60d8ff" intensity={18} distance={8} decay={2} />
-      <pointLight color="#ffffff" intensity={8}  distance={3} decay={2} />
+      <pointLight color="#ffffff" intensity={8} distance={3} decay={2} />
     </group>
   );
 }

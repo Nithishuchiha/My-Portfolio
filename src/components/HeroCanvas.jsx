@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import useScramble from '../hooks/useScramble';
 
-gsap.registerPlugin(ScrollTrigger);
 
 // PNG frame sequence exported from the original animated SVG.
 // Files live under: public/hero/png/<prefix>-0.png … <prefix>-79.png
@@ -38,6 +37,9 @@ export default function HeroCanvas() {
   const [roleVisible, setRoleVisible] = useState(true);
   const [firstFrameLoaded, setFirstFrameLoaded] = useState(false);
   const [introDone, setIntroDone] = useState(false);
+
+  // Scramble the role label whenever it becomes visible
+  const scrambledRole = useScramble(ROLES[roleIdx], roleVisible);
 
   // ── Show exactly one PNG frame via canvas (zero DOM reflow) ───────────────
   const showFrame = (idx) => {
@@ -75,7 +77,7 @@ export default function HeroCanvas() {
           const { width: cw, height: ch } = canvas;
           canvas.width = canvas.offsetWidth || window.innerWidth;
           canvas.height = canvas.offsetHeight || window.innerHeight;
-          const bw = imgEl.naturalWidth  || cw;
+          const bw = imgEl.naturalWidth || cw;
           const bh = imgEl.naturalHeight || ch;
           const scale = Math.max(cw / bw, ch / bh);
           const dx = (cw - bw * scale) / 2;
@@ -143,7 +145,7 @@ export default function HeroCanvas() {
             .then((bmp) => {
               if (!cancelled) bitmapsRef.current[i] = bmp;
             })
-            .catch(() => {/* keep img fallback */})
+            .catch(() => {/* keep img fallback */ })
             .finally(() => onDone(i));
         } else {
           onDone(i);
@@ -188,7 +190,7 @@ export default function HeroCanvas() {
       if (supportsImageBitmap) {
         createImageBitmap(first)
           .then((bmp) => { if (!cancelled) bitmapsRef.current[0] = bmp; })
-          .catch(() => {})
+          .catch(() => { })
           .finally(showAndMark0);
       } else {
         showAndMark0();
@@ -210,14 +212,13 @@ export default function HeroCanvas() {
     };
   }, []);
 
-  // ── 3. GSAP ScrollTrigger + panel entrance animation ──────────────────────
+  // ── 3. Cinematic showcase: native event-interception, no ScrollTrigger pin ──
   useEffect(() => {
     if (status !== 'ready' || !introDone) return;
 
     const section = sectionRef.current;
-    const pin = pinRef.current;
     const panel = panelRef.current;
-    if (!section || !pin) return;
+    if (!section) return;
 
     // Entrance animation for the content panel
     if (panel) {
@@ -228,32 +229,100 @@ export default function HeroCanvas() {
       );
     }
 
-    const endDistance = Math.min((TOTAL_FRAMES - READY_FRAME) * 40, 3600);
+    let played = false;   // has the showcase been triggered?
+    let animating = false;   // is the tween currently running?
+    let showcaseTween = null;
 
-    const gsapCtx = gsap.context(() => {
-      gsap.to(
-        {},
-        {
-          scrollTrigger: {
-            trigger: section,
-            start: 'top top',
-            end: `+=${endDistance}`,
-            // Lower scrub = less interpolation lag → snappier frame response
-            scrub: 0.12,
-            pin,
-            anticipatePin: 1,
-            fastScrollEnd: true,
-            onUpdate: (self) => {
-              const span = (TOTAL_FRAMES - 1) - READY_FRAME;
-              const idx = Math.round(READY_FRAME + self.progress * span);
-              showFrame(idx);
-            },
-          },
-        }
-      );
-    }, section);
+    const progressFill = section.querySelector('[data-hero-progress-fill]');
+    const scrollHint = section.querySelector('[data-hero-scroll-hint]');
+    const continueNudge = section.querySelector('[data-hero-continue]');
 
-    return () => gsapCtx.revert();
+    // ── True when the hero's top edge is flush with the viewport ─────────────
+    const heroIsAtTop = () => Math.abs(section.getBoundingClientRect().top) < 8;
+
+    // ── Start the cinematic tween ─────────────────────────────────────────────
+    const playShowcase = () => {
+      if (played) return;
+      played = true;
+      animating = true;
+
+      if (scrollHint) {
+        gsap.to(scrollHint, { opacity: 0, y: -8, duration: 0.4, ease: 'power2.in' });
+      }
+
+      showcaseTween = gsap.to(playheadRef.current, {
+        v: TOTAL_FRAMES - 1,
+        duration: 3.5,
+        ease: 'power2.inOut',
+        onUpdate: () => {
+          showFrame(Math.round(playheadRef.current.v));
+          if (progressFill) {
+            const span = (TOTAL_FRAMES - 1) - READY_FRAME;
+            const pct = Math.min(((playheadRef.current.v - READY_FRAME) / span) * 100, 100);
+            progressFill.style.width = `${pct}%`;
+          }
+        },
+        onComplete: () => {
+          animating = false;
+          // Unblock scroll — listeners will now pass through
+          if (progressFill?.parentElement) {
+            gsap.to(progressFill.parentElement, { opacity: 0, duration: 0.6, delay: 0.4 });
+          }
+          if (continueNudge) {
+            gsap.fromTo(
+              continueNudge,
+              { opacity: 0, y: 10 },
+              { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out', delay: 0.3 }
+            );
+          }
+        },
+      });
+    };
+
+    // ── Wheel: block scroll while animation plays, fire on first downward tick ─
+    const onWheel = (e) => {
+      if (!heroIsAtTop()) return;           // hero not at viewport top → ignore
+      if (played && !animating) return;     // animation done → let scroll through
+
+      e.preventDefault();                   // lock the viewport
+      if (!played && e.deltaY > 0) playShowcase();
+    };
+
+    // ── Touch: same logic ─────────────────────────────────────────────────────
+    let touchStartY = 0;
+    const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
+    const onTouchMove = (e) => {
+      if (!heroIsAtTop()) return;
+      if (played && !animating) return;
+
+      const swipingDown = touchStartY - e.touches[0].clientY > 4;
+      e.preventDefault();
+      if (!played && swipingDown) playShowcase();
+    };
+
+    // ── Keyboard: Space / ArrowDown ───────────────────────────────────────────
+    const onKey = (e) => {
+      if (!heroIsAtTop()) return;
+      if (played && !animating) return;
+      if (e.code === 'Space' || e.code === 'ArrowDown') {
+        e.preventDefault();
+        if (!played) playShowcase();
+      }
+    };
+
+    // passive:false is required so preventDefault() actually works
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('keydown', onKey);
+
+    return () => {
+      showcaseTween?.kill();
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('keydown', onKey);
+    };
   }, [status, introDone]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -472,7 +541,7 @@ export default function HeroCanvas() {
               Nithish
             </h1>
 
-            {/* Animated Role */}
+            {/* Animated Role — with text scramble on each change */}
             <div style={{ minHeight: '2rem', marginBottom: '1.5rem', overflow: 'hidden' }}>
               <span
                 style={{
@@ -490,7 +559,7 @@ export default function HeroCanvas() {
                   transition: 'opacity 0.35s ease, transform 0.35s ease',
                 }}
               >
-                {ROLES[roleIdx]}
+                {scrambledRole}
               </span>
             </div>
 
@@ -504,8 +573,9 @@ export default function HeroCanvas() {
               }}
             />
 
-            {/* Scroll prompt */}
+            {/* Scroll prompt — fades out when showcase starts */}
             <div
+              data-hero-scroll-hint
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -526,8 +596,75 @@ export default function HeroCanvas() {
                   flexShrink: 0,
                 }}
               />
-              Scroll to explore the animation
+              Let's discuss about our requirement
+
             </div>
+
+            {/* Continue nudge — revealed after showcase finishes */}
+            <div
+              data-hero-continue
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '0.8rem',
+                color: 'rgba(11,18,32,0.55)',
+                fontFamily: 'Inter,sans-serif',
+                fontSize: '0.72rem',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                opacity: 0,
+                pointerEvents: 'none',
+              }}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                style={{ animation: 'bounceDown 1.5s ease-in-out infinite' }}
+              >
+                <path
+                  d="M8 3v10M4 9l4 4 4-4"
+                  stroke="var(--accent,#39FF14)"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Continue scrolling
+            </div>
+          </div>
+        )}
+
+        {/* ── Cinematic progress bar (bottom edge of section) ──────────── */}
+        {status === 'ready' && introDone && (
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '3px',
+              background: 'rgba(11,18,32,0.08)',
+              zIndex: 10,
+              pointerEvents: 'none',
+              borderRadius: '0 0 0 0',
+            }}
+          >
+            <div
+              data-hero-progress-fill
+              style={{
+                height: '100%',
+                width: '0%',
+                background:
+                  'linear-gradient(to right, var(--accent,#39FF14), rgba(var(--accent-rgb,57,255,20),0.55))',
+                boxShadow: '0 0 14px var(--accent-glow, rgba(57,255,20,0.45))',
+                borderRadius: '0 2px 2px 0',
+                transition: 'width 0.06s linear',
+              }}
+            />
           </div>
         )}
       </div>
@@ -540,6 +677,10 @@ export default function HeroCanvas() {
         @keyframes scrollHint {
           0%,100% { opacity:.4; transform:translateY(0); }
           50%      { opacity:1;  transform:translateY(8px); }
+        }
+        @keyframes bounceDown {
+          0%,100% { transform:translateY(0);   opacity:0.6; }
+          50%      { transform:translateY(5px); opacity:1;   }
         }
 
         /* Mobile: stack panel at bottom center */

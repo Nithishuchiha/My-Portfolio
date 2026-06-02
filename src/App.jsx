@@ -4,10 +4,14 @@ import About from './components/About';
 import Projects from './components/Projects';
 import Footer from './components/Footer';
 import AccentSwitcher from './components/AccentSwitcher';
+import PageTransition from './components/PageTransition';
+import CustomCursor from './components/CustomCursor';
 
 export default function App() {
   return (
     <div style={{ minHeight: '100vh', position: 'relative' }}>
+      <CustomCursor />
+      <PageTransition />
       {/* Global background image (for About/Projects/Contact) */}
       <div
         aria-hidden="true"
