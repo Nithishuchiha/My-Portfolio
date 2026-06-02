@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import useScramble from '../hooks/useScramble';
+import { asset } from '../lib/basepath';
 
 
 // PNG frame sequence exported from the original animated SVG.
 // Files live under: public/hero/png/<prefix>-0.png … <prefix>-79.png
 const PNG_PREFIX = '/hero/png/2c64e40b-9260-4237-a835-c0f89126b878-';
+const frameUrl = (idx) => asset(`${PNG_PREFIX}${idx}.png`);
 const TOTAL_FRAMES = 80; // 0 … 79
-const frameUrl = (idx) => `${PNG_PREFIX}${idx}.png`;
 
 // Use OffscreenCanvas / ImageBitmap when available for GPU-accelerated decode
 const supportsImageBitmap = typeof createImageBitmap === 'function';

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import { categories } from '../data/projects';
 import projectData from '../data/projects';
+import { asset } from '../lib/basepath';
 
 // Lazy-load the overlay (kept from old implementation)
 const CardOverlay = lazy(() =>
@@ -14,7 +15,7 @@ const PROJECT_PREFIX = '/project/ezgif-frame-';
 const TOTAL_FRAMES = 40;
 const frameUrl = (idx) => {
   const n = String(idx + 1).padStart(3, '0');
-  return `${PROJECT_PREFIX}${n}.png`;
+  return asset(`${PROJECT_PREFIX}${n}.png`);
 };
 
 const supportsImageBitmap = typeof createImageBitmap === 'function';

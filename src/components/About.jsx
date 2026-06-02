@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
+import { asset } from '../lib/basepath';
 
 // ── Frame sequence config ────────────────────────────────────────────────────
 const ABOUT_PREFIX = '/about/ezgif-frame-';
@@ -8,7 +9,7 @@ const TOTAL_FRAMES = 56; // 001 … 056
 const frameUrl = (idx) => {
   // idx is 0-based; files are 001-based with 3-digit zero-padding
   const n = String(idx + 1).padStart(3, '0');
-  return `${ABOUT_PREFIX}${n}.png`;
+  return asset(`${ABOUT_PREFIX}${n}.png`);
 };
 
 // ImageBitmap support detection (GPU-decoded frames)

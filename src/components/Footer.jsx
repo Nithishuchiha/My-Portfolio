@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { asset } from '../lib/basepath';
 
 const CONTACT = {
   email: 'nithishperumalofficial@gmail.com',
   linkedin: 'https://www.linkedin.com/in/nithish-perumal/',
   github: 'https://github.com/Nithishuchiha',
   resumePath: '/resume.pdf',
+  get resumeUrl() { return asset(this.resumePath) },
   phoneDisplay: '+91 95667 43095',
   // Leave null until you decide to publish a real number.
   // Example: 'tel:+919876543210'
@@ -86,7 +88,7 @@ export default function Footer() {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: 'url(/about/ezgif-frame-003.png)',
+            backgroundImage: `url(${asset('/about/ezgif-frame-003.png')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center top',
             filter: 'saturate(1.15) contrast(1.05) brightness(0.92)',
@@ -232,7 +234,7 @@ export default function Footer() {
           </a>
 
           <a
-            href={CONTACT.resumePath}
+            href={CONTACT.resumeUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="glass"

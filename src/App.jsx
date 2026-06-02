@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import AccentSwitcher from './components/AccentSwitcher';
 import PageTransition from './components/PageTransition';
 import CustomCursor from './components/CustomCursor';
+import { asset } from './lib/basepath';
 
 export default function App() {
   return (
@@ -27,7 +28,7 @@ export default function App() {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: 'url(/hero/background.png)',
+            backgroundImage: `url(${asset('/hero/background.png')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'saturate(1.05) contrast(1.02)',
