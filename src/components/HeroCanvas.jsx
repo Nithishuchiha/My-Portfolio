@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import useScramble from '../hooks/useScramble';
 import { asset } from '../lib/basepath';
+import HeroParticles from './HeroParticles';
+import HeroStats from './HeroStats';
 
 
 // PNG frame sequence exported from the original animated SVG.
@@ -29,6 +31,7 @@ export default function HeroCanvas() {
   const currentIdxRef = useRef(-1);
   const rafRef = useRef(null);         // pending rAF handle
   const panelRef = useRef(null);
+  const photoRef = useRef(null);       // mobile hero photo element
 
   const playheadRef = useRef({ v: 0 });
   const preloadImgsRef = useRef([]);
@@ -38,6 +41,18 @@ export default function HeroCanvas() {
   const [roleVisible, setRoleVisible] = useState(true);
   const [firstFrameLoaded, setFirstFrameLoaded] = useState(false);
   const [introDone, setIntroDone] = useState(false);
+
+  // ── Detect mobile layout ───────────────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 700px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // Scramble the role label whenever it becomes visible
   const scrambledRole = useScramble(ROLES[roleIdx], roleVisible);
@@ -213,7 +228,7 @@ export default function HeroCanvas() {
     };
   }, []);
 
-  // ── 3. Cinematic showcase: native event-interception, no ScrollTrigger pin ──
+  // ── 3. Cinematic showcase — desktop: wheel/key, mobile: IntersectionObserver ─
   useEffect(() => {
     if (status !== 'ready' || !introDone) return;
 
@@ -221,27 +236,57 @@ export default function HeroCanvas() {
     const panel = panelRef.current;
     if (!section) return;
 
-    // Entrance animation for the content panel
+    // ── Entrance animation for the content panel ───────────────────────────
     if (panel) {
-      gsap.fromTo(
-        panel,
-        { opacity: 0, x: 60, filter: 'blur(12px)' },
-        { opacity: 1, x: 0, filter: 'blur(0px)', duration: 1.1, ease: 'power3.out', delay: 0.15 }
-      );
+      if (isMobile) {
+        // Mobile: slide up from below with spring ease, then stagger children
+        gsap.fromTo(
+          panel,
+          { opacity: 0, y: 60 },
+          {
+            opacity: 1, y: 0,
+            duration: 0.85, ease: 'back.out(1.3)', delay: 0.5,
+          }
+        );
+        // Stagger children
+        const children = panel.querySelectorAll('[data-hero-child]');
+        if (children.length > 0) {
+          gsap.fromTo(
+            children,
+            { opacity: 0, y: 20 },
+            { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out', stagger: 0.07, delay: 0.7 }
+          );
+        }
+
+        // Photo entrance: scale up from 1.08 + fade in
+        const photo = photoRef.current;
+        if (photo) {
+          gsap.fromTo(
+            photo,
+            { opacity: 0, scale: 1.1, y: -10 },
+            { opacity: 1, scale: 1, y: 0, duration: 1.1, ease: 'power3.out', delay: 0.1 }
+          );
+        }
+      } else {
+        // Desktop: slide in from right
+        gsap.fromTo(
+          panel,
+          { opacity: 0, x: 60, filter: 'blur(12px)' },
+          { opacity: 1, x: 0, filter: 'blur(0px)', duration: 1.1, ease: 'power3.out', delay: 0.15 }
+        );
+      }
     }
 
-    let played = false;   // has the showcase been triggered?
-    let animating = false;   // is the tween currently running?
+    let played = false;
+    let animating = false;
     let showcaseTween = null;
 
     const progressFill = section.querySelector('[data-hero-progress-fill]');
     const scrollHint = section.querySelector('[data-hero-scroll-hint]');
     const continueNudge = section.querySelector('[data-hero-continue]');
 
-    // ── True when the hero's top edge is flush with the viewport ─────────────
     const heroIsAtTop = () => Math.abs(section.getBoundingClientRect().top) < 8;
 
-    // ── Start the cinematic tween ─────────────────────────────────────────────
     const playShowcase = () => {
       if (played) return;
       played = true;
@@ -265,7 +310,6 @@ export default function HeroCanvas() {
         },
         onComplete: () => {
           animating = false;
-          // Unblock scroll — listeners will now pass through
           if (progressFill?.parentElement) {
             gsap.to(progressFill.parentElement, { opacity: 0, duration: 0.6, delay: 0.4 });
           }
@@ -280,51 +324,66 @@ export default function HeroCanvas() {
       });
     };
 
-    // ── Wheel: block scroll while animation plays, fire on first downward tick ─
-    const onWheel = (e) => {
-      if (!heroIsAtTop()) return;           // hero not at viewport top → ignore
-      if (played && !animating) return;     // animation done → let scroll through
+    let cleanup = () => {};
 
-      e.preventDefault();                   // lock the viewport
-      if (!played && e.deltaY > 0) playShowcase();
-    };
-
-    // ── Touch: same logic ─────────────────────────────────────────────────────
-    let touchStartY = 0;
-    const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
-    const onTouchMove = (e) => {
-      if (!heroIsAtTop()) return;
-      if (played && !animating) return;
-
-      const swipingDown = touchStartY - e.touches[0].clientY > 4;
-      e.preventDefault();
-      if (!played && swipingDown) playShowcase();
-    };
-
-    // ── Keyboard: Space / ArrowDown ───────────────────────────────────────────
-    const onKey = (e) => {
-      if (!heroIsAtTop()) return;
-      if (played && !animating) return;
-      if (e.code === 'Space' || e.code === 'ArrowDown') {
+    if (isMobile) {
+      // ── Mobile: auto-play via IntersectionObserver ─────────────────────
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.35 && !played) {
+              playShowcase();
+            }
+          });
+        },
+        { threshold: 0.35 }
+      );
+      observer.observe(section);
+      cleanup = () => { showcaseTween?.kill(); observer.disconnect(); };
+    } else {
+      // ── Desktop: wheel / touch / keyboard ─────────────────────────────
+      const onWheel = (e) => {
+        if (!heroIsAtTop()) return;
+        if (played && !animating) return;
         e.preventDefault();
-        if (!played) playShowcase();
-      }
-    };
+        if (!played && e.deltaY > 0) playShowcase();
+      };
 
-    // passive:false is required so preventDefault() actually works
-    window.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchmove', onTouchMove, { passive: false });
-    window.addEventListener('keydown', onKey);
+      let touchStartY = 0;
+      const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
+      const onTouchMove = (e) => {
+        if (!heroIsAtTop()) return;
+        if (played && !animating) return;
+        const swipingDown = touchStartY - e.touches[0].clientY > 4;
+        e.preventDefault();
+        if (!played && swipingDown) playShowcase();
+      };
 
-    return () => {
-      showcaseTween?.kill();
-      window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [status, introDone]);
+      const onKey = (e) => {
+        if (!heroIsAtTop()) return;
+        if (played && !animating) return;
+        if (e.code === 'Space' || e.code === 'ArrowDown') {
+          e.preventDefault();
+          if (!played) playShowcase();
+        }
+      };
+
+      window.addEventListener('wheel', onWheel, { passive: false });
+      window.addEventListener('touchstart', onTouchStart, { passive: true });
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('keydown', onKey);
+
+      cleanup = () => {
+        showcaseTween?.kill();
+        window.removeEventListener('wheel', onWheel);
+        window.removeEventListener('touchstart', onTouchStart);
+        window.removeEventListener('touchmove', onTouchMove);
+        window.removeEventListener('keydown', onKey);
+      };
+    }
+
+    return cleanup;
+  }, [status, introDone, isMobile]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -336,12 +395,13 @@ export default function HeroCanvas() {
       <div
         ref={pinRef}
         style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           width: '100vw',
           position: 'relative',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
+          alignItems: isMobile ? 'stretch' : 'center',
+          justifyContent: isMobile ? 'center' : 'flex-end',
+          flexDirection: isMobile ? 'column' : 'row',
         }}
       >
         {/* Ensure hero flipbook fully owns its background */}
@@ -447,30 +507,55 @@ export default function HeroCanvas() {
             zIndex: 0,
             userSelect: 'none',
             pointerEvents: 'none',
-            // Promote to its own GPU compositor layer
             willChange: 'transform',
             transform: 'translateZ(0)',
           }}
         />
 
-        {/* ── Light-to-clear vignette so right panel stays readable ───── */}
+        {/* ── Vignette — adapts direction for mobile ───────────────────── */}
         <div
+          aria-hidden="true"
+          className="hero-vignette"
           style={{
             position: 'absolute',
             inset: 0,
             zIndex: 1,
             pointerEvents: 'none',
-            background:
-              'linear-gradient(to right, rgba(246,250,255,0.00) 35%, rgba(246,250,255,0.55) 70%, rgba(246,250,255,0.88) 100%)',
+            background: isMobile
+              ? 'linear-gradient(to bottom, rgba(246,250,255,0.00) 10%, rgba(246,250,255,0.15) 45%, rgba(246,250,255,0.30) 100%)'
+              : 'linear-gradient(to right, rgba(246,250,255,0.00) 35%, rgba(246,250,255,0.55) 70%, rgba(246,250,255,0.88) 100%)',
           }}
         />
 
-        {/* ── Right-side glassmorphic content panel ───────────────────── */}
+        {/* ── Floating decorative particles (desktop only) ─────────────── */}
+        {!isMobile && <HeroParticles />}
+
+
+        {/* ── Content panel — desktop: right float, mobile: bottom sheet ─ */}
         {status === 'ready' && introDone && (
           <div
             ref={panelRef}
             data-hero-panel
-            style={{
+              style={isMobile ? {
+              position: 'relative',
+              zIndex: 5,
+              width: '100%',
+              flex: 1,
+              margin: 0,
+              padding: 'clamp(2.5rem, 8vh, 4rem) 1.5rem 2rem',
+              background: 'linear-gradient(160deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.78) 50%, rgba(var(--accent-rgb,57,255,20),0.03) 100%)',
+              backdropFilter: 'blur(32px)',
+              WebkitBackdropFilter: 'blur(32px)',
+              border: '1px solid rgba(11,18,32,0.08)',
+              borderRadius: '0',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: 'none',
+              flexShrink: 0,
+              overflow: 'hidden',
+            } : {
+              // ── Desktop styles ─────────────────────────────────────────
               position: 'relative',
               zIndex: 5,
               marginRight: 'clamp(2rem, 6vw, 7rem)',
@@ -486,155 +571,444 @@ export default function HeroCanvas() {
                 '0 0 0 1px rgba(255,255,255,0.35), 0 24px 70px rgba(7,129,245,0.18), 0 20px 50px rgba(11,18,32,0.14)',
             }}
           >
-            {/* Eyebrow */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.4rem' }}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '2px',
-                  background: 'var(--accent, #39FF14)',
-                  boxShadow: '0 0 8px var(--accent, #39FF14)',
-                  borderRadius: '2px',
-                }}
-              />
-              <span
-                style={{
-                  fontSize: '0.68rem',
-                  letterSpacing: '0.28em',
-                  textTransform: 'uppercase',
-                  color: 'var(--accent, #39FF14)',
-                  fontFamily: 'Inter,sans-serif',
-                  fontWeight: 500,
-                }}
-              >
-                Portfolio
-              </span>
-            </div>
+            {isMobile ? (
+              <>
+                {/* ── Mobile: Photo block — top 50% of viewport ─────────── */}
+                <div
+                  ref={photoRef}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '50%',
+                    overflow: 'hidden',
+                    zIndex: 2,
+                  }}
+                >
+                  {/* Actual photo */}
+                  <img
+                    src={asset('/hero/hero-1.jpeg')}
+                    alt="Nithish — Full Stack Developer"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center 15%',
+                      display: 'block',
+                      animation: 'photoFloat 6s ease-in-out infinite',
+                      willChange: 'transform',
+                    }}
+                  />
 
-            {/* Hi greeting */}
-            <p
-              style={{
-                margin: '0 0 0.25rem 0',
-                fontFamily: 'Inter,sans-serif',
-                fontSize: 'clamp(0.85rem, 1.4vw, 1rem)',
-                color: 'rgba(11,18,32,0.60)',
-                fontWeight: 400,
-                letterSpacing: '0.02em',
-              }}
-            >
-              Hi, I'm
-            </p>
+                  {/* Accent glow overlay at bottom of photo — bleeds into panel */}
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '55%',
+                      background: 'linear-gradient(to bottom, transparent 0%, rgba(var(--accent-rgb,57,255,20),0.04) 60%, var(--bg) 100%)',
+                      pointerEvents: 'none',
+                    }}
+                  />
 
-            {/* Name */}
-            <h1
-              style={{
-                margin: '0 0 0.75rem 0',
-                fontFamily: 'Outfit, Inter, sans-serif',
-                fontWeight: 900,
-                fontSize: 'clamp(2.8rem, 5vw, 4rem)',
-                lineHeight: 1.0,
-                letterSpacing: '-0.03em',
-                color: 'var(--text)',
-                textShadow: '0 18px 50px rgba(7,129,245,0.14)',
-              }}
-            >
-              Nithish
-            </h1>
+                  {/* Shimmer sweep — single pass on mount */}
+                  <div
+                    aria-hidden="true"
+                    className="photo-shimmer"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%)',
+                      animation: 'shimmerSweep 1.4s ease-out 0.3s 1 forwards',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                </div>
 
-            {/* Animated Role — with text scramble on each change */}
-            <div style={{ minHeight: '2rem', marginBottom: '1.5rem', overflow: 'hidden' }}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  fontFamily: 'Outfit, Inter, sans-serif',
-                  fontWeight: 700,
-                  fontSize: 'clamp(1rem, 2vw, 1.25rem)',
-                  letterSpacing: '-0.01em',
-                  background: 'linear-gradient(135deg, var(--text) 25%, var(--accent, #39FF14) 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  opacity: roleVisible ? 1 : 0,
-                  transform: roleVisible ? 'translateY(0)' : 'translateY(8px)',
-                  transition: 'opacity 0.35s ease, transform 0.35s ease',
-                }}
-              >
-                {scrambledRole}
-              </span>
-            </div>
-
-            {/* Divider */}
-            <div
-              style={{
-                width: '100%',
-                height: '1px',
-                background: 'linear-gradient(to right, rgba(11,18,32,0.14), transparent)',
-                marginBottom: '1.5rem',
-              }}
-            />
-
-            {/* Scroll prompt — fades out when showcase starts */}
-            <div
-              data-hero-scroll-hint
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                color: 'rgba(11,18,32,0.55)',
-                fontFamily: 'Inter,sans-serif',
-                fontSize: '0.72rem',
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-              }}
-            >
-              <div
-                style={{
-                  width: '1.5px',
-                  height: '32px',
-                  background: 'linear-gradient(to bottom, var(--accent, #39FF14), transparent)',
-                  animation: 'scrollHint 1.8s ease-in-out infinite',
-                  flexShrink: 0,
-                }}
-              />
-              Let's discuss about our requirement
-
-            </div>
-
-            {/* Continue nudge — revealed after showcase finishes */}
-            <div
-              data-hero-continue
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginTop: '0.8rem',
-                color: 'rgba(11,18,32,0.55)',
-                fontFamily: 'Inter,sans-serif',
-                fontSize: '0.72rem',
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                opacity: 0,
-                pointerEvents: 'none',
-              }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                style={{ animation: 'bounceDown 1.5s ease-in-out infinite' }}
-              >
-                <path
-                  d="M8 3v10M4 9l4 4 4-4"
-                  stroke="var(--accent,#39FF14)"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                {/* ── Decorative accent glow orbs ──────────────────────── */}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    top: '38%',
+                    right: '-10%',
+                    width: '220px',
+                    height: '220px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle at center, rgba(var(--accent-rgb,57,255,20),0.14), transparent 70%)',
+                    filter: 'blur(45px)',
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                    animation: 'orbDrift 8s ease-in-out infinite',
+                  }}
                 />
-              </svg>
-              Continue scrolling
-            </div>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    top: '42%',
+                    left: '-12%',
+                    width: '180px',
+                    height: '180px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle at center, rgba(var(--accent-rgb,57,255,20),0.08), transparent 70%)',
+                    filter: 'blur(55px)',
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                    animation: 'orbDrift 10s ease-in-out 2s infinite reverse',
+                  }}
+                />
+
+
+                {/* ── Bottom panel: text content — lower 50% ────────────── */}
+                <div
+                  ref={panelRef}
+                  data-hero-panel
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '52%',
+                    zIndex: 5,
+                    padding: '1.6rem 1.5rem calc(1.75rem + env(safe-area-inset-bottom, 0px))',
+                    background: 'linear-gradient(160deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.88) 100%)',
+                    backdropFilter: 'blur(28px)',
+                    WebkitBackdropFilter: 'blur(28px)',
+                    borderTop: '1px solid rgba(11,18,32,0.07)',
+                    borderRadius: '0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* ── Intro row: greeting + name ────────────────────── */}
+                  <div style={{ flexShrink: 0 }}>
+                    {/* Hi, I'm — large display label */}
+                    <p
+                      data-hero-child
+                      style={{
+                        margin: '0 0 0.1rem',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '0.78rem',
+                        fontWeight: 500,
+                        letterSpacing: '0.22em',
+                        textTransform: 'uppercase',
+                        color: 'rgba(11,18,32,0.42)',
+                      }}
+                    >
+                      Hi, I'm
+                    </p>
+
+                    {/* Name — bold display */}
+                    <h1
+                      data-hero-child
+                      style={{
+                        margin: '0 0 0.25rem',
+                        fontFamily: 'Outfit, Inter, sans-serif',
+                        fontWeight: 900,
+                        fontSize: 'clamp(2.4rem, 13vw, 3rem)',
+                        lineHeight: 0.95,
+                        letterSpacing: '-0.04em',
+                        background: 'linear-gradient(130deg, var(--text) 20%, rgba(var(--accent-rgb,57,255,20),0.80) 110%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                      }}
+                    >
+                      Nithish
+                    </h1>
+
+                    {/* Animated role */}
+                    <div data-hero-child style={{ minHeight: '1.4rem', marginBottom: '0.9rem', overflow: 'hidden' }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 600,
+                          fontSize: '0.85rem',
+                          letterSpacing: '0.01em',
+                          color: 'rgba(11,18,32,0.55)',
+                          opacity: roleVisible ? 1 : 0,
+                          transform: roleVisible ? 'translateY(0)' : 'translateY(6px)',
+                          transition: 'opacity 0.35s ease, transform 0.35s ease',
+                        }}
+                      >
+                        {/* Accent dot */}
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            background: 'var(--accent, #39FF14)',
+                            boxShadow: '0 0 6px var(--accent-glow)',
+                            flexShrink: 0,
+                          }}
+                        />
+                        {scrambledRole}
+                      </span>
+                    </div>
+
+                    {/* Accent rule */}
+                    <div
+                      data-hero-child
+                      style={{
+                        width: '40px',
+                        height: '1.5px',
+                        background: 'linear-gradient(to right, var(--accent, #39FF14), transparent)',
+                        marginBottom: '0.9rem',
+                      }}
+                    />
+                  </div>
+
+                  {/* ── Middle: why choose me ─────────────────────────── */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <p
+                      data-hero-child
+                      style={{
+                        margin: 0,
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '0.88rem',
+                        lineHeight: 1.72,
+                        color: 'rgba(11,18,32,0.60)',
+                        fontWeight: 400,
+                        letterSpacing: '0.005em',
+                      }}
+                    >
+                      I don't just write code —{' '}
+                      <span
+                        style={{
+                          color: 'var(--text)',
+                          fontWeight: 600,
+                          fontStyle: 'normal',
+                        }}
+                      >
+                        I obsess over every detail
+                      </span>{' '}
+                      that makes someone stop and think{' '}
+                      <em
+                        style={{
+                          fontStyle: 'italic',
+                          fontWeight: 700,
+                          color: 'var(--text)',
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        'wow.'
+                      </em>
+                      {' '}If you want someone who treats your project like their own —
+                      you're in the right place.
+                    </p>
+                  </div>
+
+                  {/* ── Bottom: scroll nudge ──────────────────────────── */}
+                  <p
+                    data-hero-child
+                    data-hero-scroll-hint
+                    style={{
+                      margin: '1rem 0 0',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '0.68rem',
+                      fontWeight: 500,
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(11,18,32,0.32)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '20px',
+                        height: '1px',
+                        background: 'var(--accent, #39FF14)',
+                        opacity: 0.7,
+                        flexShrink: 0,
+                      }}
+                    />
+                    Scroll through my work
+                    <span
+                      style={{
+                        color: 'var(--accent, #39FF14)',
+                        animation: 'bounceDown 1.8s ease-in-out infinite',
+                        display: 'inline-block',
+                        marginLeft: '2px',
+                      }}
+                    >
+                      ↓
+                    </span>
+                  </p>
+                </div>
+
+            </>
+          ) : (
+            <>
+              {/* ── Desktop content ─────────────────────────────────────── */}
+              <div data-hero-child style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.4rem' }}>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '2px',
+                    background: 'var(--accent, #39FF14)',
+                    boxShadow: '0 0 8px var(--accent, #39FF14)',
+                    borderRadius: '2px',
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: '0.68rem',
+                    letterSpacing: '0.28em',
+                    textTransform: 'uppercase',
+                    color: 'var(--accent, #39FF14)',
+                    fontFamily: 'Inter,sans-serif',
+                    fontWeight: 500,
+                  }}
+                >
+                  Portfolio
+                </span>
+              </div>
+
+              <p
+                data-hero-child
+                style={{
+                  margin: '0 0 0.25rem 0',
+                  fontFamily: 'Inter,sans-serif',
+                  fontSize: 'clamp(0.85rem, 1.4vw, 1rem)',
+                  color: 'rgba(11,18,32,0.60)',
+                  fontWeight: 400,
+                  letterSpacing: '0.02em',
+                }}
+              >
+                Hi, I'm
+              </p>
+
+              <h1
+                data-hero-child
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  fontFamily: 'Outfit, Inter, sans-serif',
+                  fontWeight: 900,
+                  fontSize: 'clamp(2.8rem, 5vw, 4rem)',
+                  lineHeight: 1.0,
+                  letterSpacing: '-0.03em',
+                  color: 'var(--text)',
+                  textShadow: '0 18px 50px rgba(7,129,245,0.14)',
+                }}
+              >
+                Nithish
+              </h1>
+
+              <div style={{ minHeight: '2rem', marginBottom: '1.5rem', overflow: 'hidden' }}>
+                <span
+                  data-hero-child
+                  style={{
+                    display: 'inline-block',
+                    fontFamily: 'Outfit, Inter, sans-serif',
+                    fontWeight: 700,
+                    fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+                    letterSpacing: '-0.01em',
+                    background: 'linear-gradient(135deg, var(--text) 25%, var(--accent, #39FF14) 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    opacity: roleVisible ? 1 : 0,
+                    transform: roleVisible ? 'translateY(0)' : 'translateY(8px)',
+                    transition: 'opacity 0.35s ease, transform 0.35s ease',
+                  }}
+                >
+                  {scrambledRole}
+                </span>
+              </div>
+
+              <div
+                data-hero-child
+                style={{
+                  width: '100%',
+                  height: '1px',
+                  background: 'linear-gradient(to right, rgba(11,18,32,0.14), transparent)',
+                  marginBottom: '1.2rem',
+                }}
+              />
+
+              {/* Desktop stats */}
+              <div data-hero-child style={{ marginBottom: '1.2rem' }}>
+                <HeroStats />
+              </div>
+
+              {/* Desktop scroll prompt */}
+              <div
+                data-hero-scroll-hint
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  color: 'rgba(11,18,32,0.55)',
+                  fontFamily: 'Inter,sans-serif',
+                  fontSize: '0.72rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                <div
+                  style={{
+                    width: '1.5px',
+                    height: '32px',
+                    background: 'linear-gradient(to bottom, var(--accent, #39FF14), transparent)',
+                    animation: 'scrollHint 1.8s ease-in-out infinite',
+                    flexShrink: 0,
+                  }}
+                />
+                Let's discuss about our requirement
+              </div>
+
+              {/* Desktop continue nudge */}
+              <div
+                data-hero-continue
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginTop: '0.8rem',
+                  color: 'rgba(11,18,32,0.55)',
+                  fontFamily: 'Inter,sans-serif',
+                  fontSize: '0.72rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  opacity: 0,
+                  pointerEvents: 'none',
+                }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  style={{ animation: 'bounceDown 1.5s ease-in-out infinite' }}
+                >
+                  <path
+                    d="M8 3v10M4 9l4 4 4-4"
+                    stroke="var(--accent,#39FF14)"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Continue scrolling
+              </div>
+            </>
+          )}
           </div>
         )}
 
@@ -651,7 +1025,6 @@ export default function HeroCanvas() {
               background: 'rgba(11,18,32,0.08)',
               zIndex: 10,
               pointerEvents: 'none',
-              borderRadius: '0 0 0 0',
             }}
           >
             <div
@@ -680,18 +1053,27 @@ export default function HeroCanvas() {
           50%      { opacity:1;  transform:translateY(8px); }
         }
         @keyframes bounceDown {
-          0%,100% { transform:translateY(0);   opacity:0.6; }
-          50%      { transform:translateY(5px); opacity:1;   }
+          0%,100% { transform:translateY(0);   opacity:0.7; }
+          50%      { transform:translateY(4px); opacity:1;   }
+        }
+        @keyframes photoFloat {
+          0%,100% { transform:scale(1.00) translateY(0px); }
+          50%      { transform:scale(1.03) translateY(-6px); }
+        }
+        @keyframes shimmerSweep {
+          0%   { transform:translateX(-120%); opacity:1; }
+          100% { transform:translateX(120%);  opacity:0; }
+        }
+        @keyframes orbDrift {
+          0%,100% { transform:translate(0,0); }
+          40%      { transform:translate(8px,-12px); }
+          70%      { transform:translate(-6px,8px); }
         }
 
-        /* Mobile: stack panel at bottom center */
+        /* On mobile: hide canvas + vignette, photo block handles visuals */
         @media (max-width: 700px) {
-          #home [data-hero-panel] {
-            margin-right: 0 !important;
-            max-width: 100% !important;
-            margin: 0 1rem 3rem !important;
-            align-self: flex-end !important;
-          }
+          #home canvas { display: none !important; }
+          #home .hero-vignette { display: none !important; }
         }
       `}</style>
     </section>

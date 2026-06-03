@@ -229,17 +229,17 @@ export default function About() {
           </div>
         )}
 
-        {/* ── Right-side fade vignette so left text stays readable ────────── */}
+        {/* ── Overlay vignette so text stays readable ──────────────────────── */}
         <div
           aria-hidden="true"
+          className="about-vignette"
           style={{
             position: 'absolute',
             inset: 0,
             zIndex: 1,
             pointerEvents: 'none',
-            // strong left gradient so text floats clearly; subtle right
             background:
-              'linear-gradient(to right, rgba(11,18,32,0.68) 0%, rgba(11,18,32,0.42) 38%, rgba(11,18,32,0.08) 65%, transparent 100%)',
+              'linear-gradient(to right, rgba(11,18,32,0.72) 0%, rgba(11,18,32,0.48) 42%, rgba(11,18,32,0.12) 72%, transparent 100%)',
           }}
         />
 
@@ -261,6 +261,7 @@ export default function About() {
         {/* ── Floating left content ──────────────────────────────────────── */}
         {loaded && (
           <div
+            className="about-content"
             style={{
               position: 'relative',
               zIndex: 5,
@@ -509,6 +510,29 @@ export default function About() {
         @keyframes aboutPulse {
           0%, 100% { transform: scale(1);   opacity: 0.4; }
           50%       { transform: scale(1.5); opacity: 1;   }
+        }
+
+        @media (max-width: 700px) {
+          .about-vignette {
+            background: linear-gradient(to right, rgba(11,18,32,0.78) 0%, rgba(11,18,32,0.65) 50%, rgba(11,18,32,0.50) 100%) !important;
+          }
+          .about-content {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            max-width: 100% !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .about-content {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+          }
+          .about-content h2 {
+            font-size: clamp(2rem, 11vw, 2.6rem) !important;
+          }
         }
       `}</style>
     </section>

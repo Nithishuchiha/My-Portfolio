@@ -61,6 +61,7 @@ export default function Footer() {
     <section
       id="contact"
       ref={sectionRef}
+      className="contact-section"
       style={{
         position: 'relative',
         minHeight: '60vh',
@@ -445,6 +446,14 @@ export default function Footer() {
           © {new Date().getFullYear()} Nithish. All rights reserved.
         </p>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .contact-section {
+            padding: 3rem 1rem !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }

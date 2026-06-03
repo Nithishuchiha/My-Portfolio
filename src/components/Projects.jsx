@@ -257,24 +257,27 @@ export default function Projects() {
   // Set once before any detach begins; never updated during animation.
   const slotsRef = useRef([]);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 480);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   // Handle responsiveness in flat mode
   useEffect(() => {
-    const handleResize = () => {
-      if (layoutMode === 'flat') {
-        const w = window.innerWidth;
-        const spacing = w < 640 ? 110 : w < 1024 ? 160 : 230;
-        const cardScale = w < 640 ? 0.75 : w < 1024 ? 0.85 : 1;
-        // Recompute slots and push to both slotsRef and cardsAnimRef so the
-        // rAF loop picks up the new positions without a React re-render.
-        slotsRef.current = CATEGORY_CARDS.map((_, i) => (i - 1.5) * spacing);
-        CATEGORY_CARDS.forEach((_, i) => {
-          cardsAnimRef.current[i].x = slotsRef.current[i];
-          cardsAnimRef.current[i].scale = cardScale;
-        });
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if (layoutMode === 'flat') {
+      const w = window.innerWidth;
+      const spacing = w < 640 ? 110 : w < 1024 ? 160 : 230;
+      const cardScale = w < 640 ? 0.75 : w < 1024 ? 0.85 : 1;
+      slotsRef.current = CATEGORY_CARDS.map((_, i) => (i - 1.5) * spacing);
+      CATEGORY_CARDS.forEach((_, i) => {
+        cardsAnimRef.current[i].x = slotsRef.current[i];
+        cardsAnimRef.current[i].scale = cardScale;
+      });
+    }
   }, [layoutMode]);
 
   // ── Draw one frame onto the canvas ────────────────────────────────────
@@ -724,6 +727,7 @@ export default function Projects() {
           >
             {/* ── Section heading — top-left corner ────────────────────── */}
             <motion.div
+              className="projects-heading"
               initial={{ opacity: 0, x: -24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, ease: 'easeOut' }}
@@ -778,7 +782,7 @@ export default function Projects() {
             </motion.div>
 
             {/* ── 3D Card Carousel — appears after character animation ── */}
-            {cardsReady && (
+            {cardsReady && !isMobile && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.7, y: 40 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -838,8 +842,109 @@ export default function Projects() {
               </motion.div>
             )}
 
+            {/* ── Mobile vertical cards ──────────────────────────────── */}
+            {cardsReady && isMobile && (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                style={{
+                  width: '100%',
+                  padding: '1rem 1rem 2rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  overflowY: 'auto',
+                  maxHeight: '65vh',
+                  marginTop: '4rem',
+                }}
+              >
+                {CATEGORY_CARDS.map((card, i) => {
+                  const rgb = hexToRgb(card.color);
+                  return (
+                    <motion.div
+                      key={card.key}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.12, duration: 0.5 }}
+                      onClick={() => handleCoinClick(card.key)}
+                      style={{
+                        padding: '1.25rem 1.5rem',
+                        borderRadius: '18px',
+                        background: 'rgba(11, 18, 32, 0.55)',
+                        backdropFilter: 'blur(16px)',
+                        WebkitBackdropFilter: 'blur(16px)',
+                        border: `1px solid rgba(${rgb}, 0.35)`,
+                        boxShadow: `0 8px 32px rgba(0,0,0,0.25), 0 0 20px rgba(${rgb}, 0.15)`,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        transition: 'all 0.25s ease',
+                      }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '14px',
+                        background: `rgba(${rgb}, 0.12)`,
+                        border: `1px solid rgba(${rgb}, 0.3)`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        boxShadow: `0 0 14px rgba(${rgb}, 0.15)`,
+                      }}>
+                        <CategoryIcon type={card.icon} color={card.color} size={26} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontFamily: 'Outfit, Inter, sans-serif',
+                          fontSize: '1rem',
+                          fontWeight: 700,
+                          color: '#fff',
+                          letterSpacing: '-0.01em',
+                          marginBottom: '2px',
+                        }}>
+                          {card.label}
+                        </div>
+                        <div style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontSize: '0.72rem',
+                          color: 'rgba(255,255,255,0.55)',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}>
+                          {card.tagline}
+                        </div>
+                      </div>
+                      <span style={{
+                        padding: '3px 10px',
+                        borderRadius: '999px',
+                        fontSize: '0.62rem',
+                        fontWeight: 700,
+                        fontFamily: 'Inter, sans-serif',
+                        letterSpacing: '0.08em',
+                        color: card.color,
+                        background: `rgba(${rgb}, 0.14)`,
+                        border: `1px solid rgba(${rgb}, 0.3)`,
+                        flexShrink: 0,
+                      }}>
+                        {card.count}
+                      </span>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
+                        <path d="M6 4l4 4-4 4" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            )}
+
             {/* ── Hint text ──────────────────────────────────────────── */}
-            {cardsReady && (
+            {cardsReady && !isMobile && (
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -879,6 +984,14 @@ export default function Projects() {
         @keyframes projectsPulse {
           0%, 100% { transform: scale(1);   opacity: 0.4; }
           50%       { transform: scale(1.5); opacity: 1;   }
+        }
+
+        @media (max-width: 640px) {
+          .projects-heading {
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            text-align: center !important;
+          }
         }
       `}</style>
     </section>

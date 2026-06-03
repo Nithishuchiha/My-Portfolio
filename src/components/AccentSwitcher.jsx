@@ -5,6 +5,7 @@ export default function AccentSwitcher() {
 
   return (
     <div
+      className="accent-switcher"
       style={{
         position: 'fixed',
         bottom: '2rem',
@@ -17,7 +18,7 @@ export default function AccentSwitcher() {
         style={{
           display: 'flex',
           borderRadius: '999px',
-          padding: '4px',
+          padding: '3px',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -26,10 +27,10 @@ export default function AccentSwitcher() {
         <div
           style={{
             position: 'absolute',
-            top: '4px',
-            left: accent === 'green' ? '4px' : 'calc(50% + 0px)',
-            width: 'calc(50% - 4px)',
-            height: 'calc(100% - 8px)',
+            top: '3px',
+            left: accent === 'green' ? '3px' : 'calc(50% + 0px)',
+            width: 'calc(50% - 3px)',
+            height: 'calc(100% - 6px)',
             borderRadius: '999px',
             background: accent === 'green' ? '#39FF14' : '#A855F7',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -43,20 +44,20 @@ export default function AccentSwitcher() {
           style={{
             position: 'relative',
             zIndex: 1,
-            padding: '0.5rem 1rem',
+            padding: '0.45rem 0.9rem',
             border: 'none',
             borderRadius: '999px',
             cursor: 'pointer',
             background: 'transparent',
             color: accent === 'green' ? 'var(--on-accent)' : 'var(--text-dim)',
             fontFamily: 'var(--font-body)',
-            fontSize: '0.75rem',
+            fontSize: '0.72rem',
             fontWeight: 600,
-            letterSpacing: '0.05em',
+            letterSpacing: '0.04em',
             transition: 'color 0.3s ease',
           }}
         >
-          🟢 Green
+          Green
         </button>
 
         <button
@@ -65,22 +66,31 @@ export default function AccentSwitcher() {
           style={{
             position: 'relative',
             zIndex: 1,
-            padding: '0.5rem 1rem',
+            padding: '0.45rem 0.9rem',
             border: 'none',
             borderRadius: '999px',
             cursor: 'pointer',
             background: 'transparent',
             color: accent === 'purple' ? 'var(--on-accent)' : 'var(--text-dim)',
             fontFamily: 'var(--font-body)',
-            fontSize: '0.75rem',
+            fontSize: '0.72rem',
             fontWeight: 600,
-            letterSpacing: '0.05em',
+            letterSpacing: '0.04em',
             transition: 'color 0.3s ease',
           }}
         >
-          🟣 Purple
+          Purple
         </button>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .accent-switcher {
+            bottom: 5rem !important;
+            right: 1.25rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
