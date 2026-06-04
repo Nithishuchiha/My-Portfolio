@@ -4,6 +4,7 @@ import useScramble from '../hooks/useScramble';
 import { asset } from '../lib/basepath';
 import HeroParticles from './HeroParticles';
 import HeroStats from './HeroStats';
+import MobileHero from './ui/MobileHero';
 
 
 // PNG frame sequence exported from the original animated SVG.
@@ -324,7 +325,7 @@ export default function HeroCanvas() {
       });
     };
 
-    let cleanup = () => {};
+    let cleanup = () => { };
 
     if (isMobile) {
       // ── Mobile: auto-play via IntersectionObserver ─────────────────────
@@ -390,18 +391,19 @@ export default function HeroCanvas() {
     <section
       id="home"
       ref={sectionRef}
-      style={{ position: 'relative', minHeight: '100vh', background: 'var(--bg)', overflow: 'hidden' }}
+      style={{ position: 'relative', minHeight: isMobile ? 'unset' : '100vh', background: isMobile ? 'transparent' : 'var(--bg)', overflow: isMobile ? 'visible' : 'hidden' }}
     >
       <div
         ref={pinRef}
         style={{
           minHeight: '100dvh',
-          width: '100vw',
+          width: '100%',
           position: 'relative',
           display: 'flex',
           alignItems: isMobile ? 'stretch' : 'center',
-          justifyContent: isMobile ? 'center' : 'flex-end',
+          justifyContent: isMobile ? 'stretch' : 'flex-end',
           flexDirection: isMobile ? 'column' : 'row',
+          overflow: isMobile ? 'visible' : 'unset',
         }}
       >
         {/* Ensure hero flipbook fully owns its background */}
@@ -531,30 +533,17 @@ export default function HeroCanvas() {
         {!isMobile && <HeroParticles />}
 
 
-        {/* ── Content panel — desktop: right float, mobile: bottom sheet ─ */}
-        {status === 'ready' && introDone && (
+        {/* ── Mobile full-screen hero — rendered as its own layer ────────── */}
+        {isMobile && status === 'ready' && introDone && (
+          <MobileHero />
+        )}
+
+        {/* ── Content panel — desktop: right float only ─────────────────── */}
+        {!isMobile && status === 'ready' && introDone && (
           <div
             ref={panelRef}
             data-hero-panel
-              style={isMobile ? {
-              position: 'relative',
-              zIndex: 5,
-              width: '100%',
-              flex: 1,
-              margin: 0,
-              padding: 'clamp(2.5rem, 8vh, 4rem) 1.5rem 2rem',
-              background: 'linear-gradient(160deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.78) 50%, rgba(var(--accent-rgb,57,255,20),0.03) 100%)',
-              backdropFilter: 'blur(32px)',
-              WebkitBackdropFilter: 'blur(32px)',
-              border: '1px solid rgba(11,18,32,0.08)',
-              borderRadius: '0',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: 'none',
-              flexShrink: 0,
-              overflow: 'hidden',
-            } : {
+            style={{
               // ── Desktop styles ─────────────────────────────────────────
               position: 'relative',
               zIndex: 5,
@@ -571,444 +560,161 @@ export default function HeroCanvas() {
                 '0 0 0 1px rgba(255,255,255,0.35), 0 24px 70px rgba(7,129,245,0.18), 0 20px 50px rgba(11,18,32,0.14)',
             }}
           >
-            {isMobile ? (
-              <>
-                {/* ── Mobile: Photo block — top 50% of viewport ─────────── */}
-                <div
-                  ref={photoRef}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '50%',
-                    overflow: 'hidden',
-                    zIndex: 2,
-                  }}
-                >
-                  {/* Actual photo */}
-                  <img
-                    src={asset('/hero/hero-1.jpeg')}
-                    alt="Nithish — Full Stack Developer"
+            <>
+                {/* ── Desktop content ─────────────────────────────────────── */}
+                <div data-hero-child style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.4rem' }}>
+                  <span
                     style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'center 15%',
-                      display: 'block',
-                      animation: 'photoFloat 6s ease-in-out infinite',
-                      willChange: 'transform',
+                      display: 'inline-block',
+                      width: '28px',
+                      height: '2px',
+                      background: 'var(--accent, #39FF14)',
+                      boxShadow: '0 0 8px var(--accent, #39FF14)',
+                      borderRadius: '2px',
                     }}
                   />
-
-                  {/* Accent glow overlay at bottom of photo — bleeds into panel */}
-                  <div
-                    aria-hidden="true"
+                  <span
                     style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '55%',
-                      background: 'linear-gradient(to bottom, transparent 0%, rgba(var(--accent-rgb,57,255,20),0.04) 60%, var(--bg) 100%)',
-                      pointerEvents: 'none',
-                    }}
-                  />
-
-                  {/* Shimmer sweep — single pass on mount */}
-                  <div
-                    aria-hidden="true"
-                    className="photo-shimmer"
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%)',
-                      animation: 'shimmerSweep 1.4s ease-out 0.3s 1 forwards',
-                      pointerEvents: 'none',
-                    }}
-                  />
-                </div>
-
-                {/* ── Decorative accent glow orbs ──────────────────────── */}
-                <div
-                  aria-hidden="true"
-                  style={{
-                    position: 'absolute',
-                    top: '38%',
-                    right: '-10%',
-                    width: '220px',
-                    height: '220px',
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle at center, rgba(var(--accent-rgb,57,255,20),0.14), transparent 70%)',
-                    filter: 'blur(45px)',
-                    pointerEvents: 'none',
-                    zIndex: 1,
-                    animation: 'orbDrift 8s ease-in-out infinite',
-                  }}
-                />
-                <div
-                  aria-hidden="true"
-                  style={{
-                    position: 'absolute',
-                    top: '42%',
-                    left: '-12%',
-                    width: '180px',
-                    height: '180px',
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle at center, rgba(var(--accent-rgb,57,255,20),0.08), transparent 70%)',
-                    filter: 'blur(55px)',
-                    pointerEvents: 'none',
-                    zIndex: 1,
-                    animation: 'orbDrift 10s ease-in-out 2s infinite reverse',
-                  }}
-                />
-
-
-                {/* ── Bottom panel: text content — lower 50% ────────────── */}
-                <div
-                  ref={panelRef}
-                  data-hero-panel
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '52%',
-                    zIndex: 5,
-                    padding: '1.6rem 1.5rem calc(1.75rem + env(safe-area-inset-bottom, 0px))',
-                    background: 'linear-gradient(160deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.88) 100%)',
-                    backdropFilter: 'blur(28px)',
-                    WebkitBackdropFilter: 'blur(28px)',
-                    borderTop: '1px solid rgba(11,18,32,0.07)',
-                    borderRadius: '0',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {/* ── Intro row: greeting + name ────────────────────── */}
-                  <div style={{ flexShrink: 0 }}>
-                    {/* Hi, I'm — large display label */}
-                    <p
-                      data-hero-child
-                      style={{
-                        margin: '0 0 0.1rem',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '0.78rem',
-                        fontWeight: 500,
-                        letterSpacing: '0.22em',
-                        textTransform: 'uppercase',
-                        color: 'rgba(11,18,32,0.42)',
-                      }}
-                    >
-                      Hi, I'm
-                    </p>
-
-                    {/* Name — bold display */}
-                    <h1
-                      data-hero-child
-                      style={{
-                        margin: '0 0 0.25rem',
-                        fontFamily: 'Outfit, Inter, sans-serif',
-                        fontWeight: 900,
-                        fontSize: 'clamp(2.4rem, 13vw, 3rem)',
-                        lineHeight: 0.95,
-                        letterSpacing: '-0.04em',
-                        background: 'linear-gradient(130deg, var(--text) 20%, rgba(var(--accent-rgb,57,255,20),0.80) 110%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                      }}
-                    >
-                      Nithish
-                    </h1>
-
-                    {/* Animated role */}
-                    <div data-hero-child style={{ minHeight: '1.4rem', marginBottom: '0.9rem', overflow: 'hidden' }}>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 600,
-                          fontSize: '0.85rem',
-                          letterSpacing: '0.01em',
-                          color: 'rgba(11,18,32,0.55)',
-                          opacity: roleVisible ? 1 : 0,
-                          transform: roleVisible ? 'translateY(0)' : 'translateY(6px)',
-                          transition: 'opacity 0.35s ease, transform 0.35s ease',
-                        }}
-                      >
-                        {/* Accent dot */}
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            width: '6px',
-                            height: '6px',
-                            borderRadius: '50%',
-                            background: 'var(--accent, #39FF14)',
-                            boxShadow: '0 0 6px var(--accent-glow)',
-                            flexShrink: 0,
-                          }}
-                        />
-                        {scrambledRole}
-                      </span>
-                    </div>
-
-                    {/* Accent rule */}
-                    <div
-                      data-hero-child
-                      style={{
-                        width: '40px',
-                        height: '1.5px',
-                        background: 'linear-gradient(to right, var(--accent, #39FF14), transparent)',
-                        marginBottom: '0.9rem',
-                      }}
-                    />
-                  </div>
-
-                  {/* ── Middle: why choose me ─────────────────────────── */}
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <p
-                      data-hero-child
-                      style={{
-                        margin: 0,
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '0.88rem',
-                        lineHeight: 1.72,
-                        color: 'rgba(11,18,32,0.60)',
-                        fontWeight: 400,
-                        letterSpacing: '0.005em',
-                      }}
-                    >
-                      I don't just write code —{' '}
-                      <span
-                        style={{
-                          color: 'var(--text)',
-                          fontWeight: 600,
-                          fontStyle: 'normal',
-                        }}
-                      >
-                        I obsess over every detail
-                      </span>{' '}
-                      that makes someone stop and think{' '}
-                      <em
-                        style={{
-                          fontStyle: 'italic',
-                          fontWeight: 700,
-                          color: 'var(--text)',
-                          letterSpacing: '-0.01em',
-                        }}
-                      >
-                        'wow.'
-                      </em>
-                      {' '}If you want someone who treats your project like their own —
-                      you're in the right place.
-                    </p>
-                  </div>
-
-                  {/* ── Bottom: scroll nudge ──────────────────────────── */}
-                  <p
-                    data-hero-child
-                    data-hero-scroll-hint
-                    style={{
-                      margin: '1rem 0 0',
-                      fontFamily: 'Inter, sans-serif',
                       fontSize: '0.68rem',
-                      fontWeight: 500,
-                      letterSpacing: '0.14em',
+                      letterSpacing: '0.28em',
                       textTransform: 'uppercase',
-                      color: 'rgba(11,18,32,0.32)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      flexShrink: 0,
+                      color: 'var(--accent, #39FF14)',
+                      fontFamily: 'Inter,sans-serif',
+                      fontWeight: 500,
                     }}
                   >
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '20px',
-                        height: '1px',
-                        background: 'var(--accent, #39FF14)',
-                        opacity: 0.7,
-                        flexShrink: 0,
-                      }}
-                    />
-                    Scroll through my work
-                    <span
-                      style={{
-                        color: 'var(--accent, #39FF14)',
-                        animation: 'bounceDown 1.8s ease-in-out infinite',
-                        display: 'inline-block',
-                        marginLeft: '2px',
-                      }}
-                    >
-                      ↓
-                    </span>
-                  </p>
+                    Portfolio
+                  </span>
                 </div>
 
-            </>
-          ) : (
-            <>
-              {/* ── Desktop content ─────────────────────────────────────── */}
-              <div data-hero-child style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.4rem' }}>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: '28px',
-                    height: '2px',
-                    background: 'var(--accent, #39FF14)',
-                    boxShadow: '0 0 8px var(--accent, #39FF14)',
-                    borderRadius: '2px',
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: '0.68rem',
-                    letterSpacing: '0.28em',
-                    textTransform: 'uppercase',
-                    color: 'var(--accent, #39FF14)',
-                    fontFamily: 'Inter,sans-serif',
-                    fontWeight: 500,
-                  }}
-                >
-                  Portfolio
-                </span>
-              </div>
-
-              <p
-                data-hero-child
-                style={{
-                  margin: '0 0 0.25rem 0',
-                  fontFamily: 'Inter,sans-serif',
-                  fontSize: 'clamp(0.85rem, 1.4vw, 1rem)',
-                  color: 'rgba(11,18,32,0.60)',
-                  fontWeight: 400,
-                  letterSpacing: '0.02em',
-                }}
-              >
-                Hi, I'm
-              </p>
-
-              <h1
-                data-hero-child
-                style={{
-                  margin: '0 0 0.75rem 0',
-                  fontFamily: 'Outfit, Inter, sans-serif',
-                  fontWeight: 900,
-                  fontSize: 'clamp(2.8rem, 5vw, 4rem)',
-                  lineHeight: 1.0,
-                  letterSpacing: '-0.03em',
-                  color: 'var(--text)',
-                  textShadow: '0 18px 50px rgba(7,129,245,0.14)',
-                }}
-              >
-                Nithish
-              </h1>
-
-              <div style={{ minHeight: '2rem', marginBottom: '1.5rem', overflow: 'hidden' }}>
-                <span
+                <p
                   data-hero-child
                   style={{
-                    display: 'inline-block',
-                    fontFamily: 'Outfit, Inter, sans-serif',
-                    fontWeight: 700,
-                    fontSize: 'clamp(1rem, 2vw, 1.25rem)',
-                    letterSpacing: '-0.01em',
-                    background: 'linear-gradient(135deg, var(--text) 25%, var(--accent, #39FF14) 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    opacity: roleVisible ? 1 : 0,
-                    transform: roleVisible ? 'translateY(0)' : 'translateY(8px)',
-                    transition: 'opacity 0.35s ease, transform 0.35s ease',
+                    margin: '0 0 0.25rem 0',
+                    fontFamily: 'Inter,sans-serif',
+                    fontSize: 'clamp(0.85rem, 1.4vw, 1rem)',
+                    color: 'rgba(11,18,32,0.60)',
+                    fontWeight: 400,
+                    letterSpacing: '0.02em',
                   }}
                 >
-                  {scrambledRole}
-                </span>
-              </div>
+                  Hi, I'm
+                </p>
 
-              <div
-                data-hero-child
-                style={{
-                  width: '100%',
-                  height: '1px',
-                  background: 'linear-gradient(to right, rgba(11,18,32,0.14), transparent)',
-                  marginBottom: '1.2rem',
-                }}
-              />
-
-              {/* Desktop stats */}
-              <div data-hero-child style={{ marginBottom: '1.2rem' }}>
-                <HeroStats />
-              </div>
-
-              {/* Desktop scroll prompt */}
-              <div
-                data-hero-scroll-hint
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  color: 'rgba(11,18,32,0.55)',
-                  fontFamily: 'Inter,sans-serif',
-                  fontSize: '0.72rem',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                <div
+                <h1
+                  data-hero-child
                   style={{
-                    width: '1.5px',
-                    height: '32px',
-                    background: 'linear-gradient(to bottom, var(--accent, #39FF14), transparent)',
-                    animation: 'scrollHint 1.8s ease-in-out infinite',
-                    flexShrink: 0,
+                    margin: '0 0 0.75rem 0',
+                    fontFamily: 'Outfit, Inter, sans-serif',
+                    fontWeight: 900,
+                    fontSize: 'clamp(2.8rem, 5vw, 4rem)',
+                    lineHeight: 1.0,
+                    letterSpacing: '-0.03em',
+                    color: 'var(--text)',
+                    textShadow: '0 18px 50px rgba(7,129,245,0.14)',
+                  }}
+                >
+                  Nithish
+                </h1>
+
+                <div style={{ minHeight: '2rem', marginBottom: '1.5rem', overflow: 'hidden' }}>
+                  <span
+                    data-hero-child
+                    style={{
+                      display: 'inline-block',
+                      fontFamily: 'Outfit, Inter, sans-serif',
+                      fontWeight: 700,
+                      fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+                      letterSpacing: '-0.01em',
+                      background: 'linear-gradient(135deg, var(--text) 25%, var(--accent, #39FF14) 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      opacity: roleVisible ? 1 : 0,
+                      transform: roleVisible ? 'translateY(0)' : 'translateY(8px)',
+                      transition: 'opacity 0.35s ease, transform 0.35s ease',
+                    }}
+                  >
+                    {scrambledRole}
+                  </span>
+                </div>
+
+                <div
+                  data-hero-child
+                  style={{
+                    width: '100%',
+                    height: '1px',
+                    background: 'linear-gradient(to right, rgba(11,18,32,0.14), transparent)',
+                    marginBottom: '1.2rem',
                   }}
                 />
-                Let's discuss about our requirement
-              </div>
 
-              {/* Desktop continue nudge */}
-              <div
-                data-hero-continue
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginTop: '0.8rem',
-                  color: 'rgba(11,18,32,0.55)',
-                  fontFamily: 'Inter,sans-serif',
-                  fontSize: '0.72rem',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  opacity: 0,
-                  pointerEvents: 'none',
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  style={{ animation: 'bounceDown 1.5s ease-in-out infinite' }}
+                {/* Desktop stats */}
+                <div data-hero-child style={{ marginBottom: '1.2rem' }}>
+                  <HeroStats />
+                </div>
+
+                {/* Desktop scroll prompt */}
+                <div
+                  data-hero-scroll-hint
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    color: 'rgba(11,18,32,0.55)',
+                    fontFamily: 'Inter,sans-serif',
+                    fontSize: '0.72rem',
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                  }}
                 >
-                  <path
-                    d="M8 3v10M4 9l4 4 4-4"
-                    stroke="var(--accent,#39FF14)"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                  <div
+                    style={{
+                      width: '1.5px',
+                      height: '32px',
+                      background: 'linear-gradient(to bottom, var(--accent, #39FF14), transparent)',
+                      animation: 'scrollHint 1.8s ease-in-out infinite',
+                      flexShrink: 0,
+                    }}
                   />
-                </svg>
-                Continue scrolling
-              </div>
+                  Let's discuss about our requirement
+                </div>
+
+                {/* Desktop continue nudge */}
+                <div
+                  data-hero-continue
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginTop: '0.8rem',
+                    color: 'rgba(11,18,32,0.55)',
+                    fontFamily: 'Inter,sans-serif',
+                    fontSize: '0.72rem',
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                    opacity: 0,
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    style={{ animation: 'bounceDown 1.5s ease-in-out infinite' }}
+                  >
+                    <path
+                      d="M8 3v10M4 9l4 4 4-4"
+                      stroke="var(--accent,#39FF14)"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Continue scrolling
+                </div>
             </>
-          )}
           </div>
         )}
 
@@ -1070,11 +776,13 @@ export default function HeroCanvas() {
           70%      { transform:translate(-6px,8px); }
         }
 
-        /* On mobile: hide canvas + vignette, photo block handles visuals */
+        /* On mobile: hide canvas + vignette — MobileHero owns the full screen */
         @media (max-width: 700px) {
           #home canvas { display: none !important; }
           #home .hero-vignette { display: none !important; }
+          [data-hero-panel] { display: none !important; }
         }
+
       `}</style>
     </section>
   );

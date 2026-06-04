@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { asset } from '../lib/basepath';
+import MobileFooter from './ui/MobileFooter';
+
 
 const CONTACT = {
   email: 'nithishperumalofficial@gmail.com',
@@ -45,6 +47,17 @@ export default function Footer() {
   const sectionRef = useRef(null);
   const curtainRef = useRef(null);
   const [toast, setToast] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // ── Detect mobile (≤700px) ───────────────────────────────────────────────
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 700px)');
+    const handler = (e) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
 
   useEffect(() => {
     if (!toast) return;
@@ -58,21 +71,26 @@ export default function Footer() {
   };
 
   return (
-    <section
-      id="contact"
-      ref={sectionRef}
-      className="contact-section"
-      style={{
-        position: 'relative',
-        minHeight: '60vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        padding: '4rem 2rem',
-        borderTop: '1px solid var(--hairline)',
-      }}
-    >
+    <>
+      {/* ── Mobile: dedicated cosmic sky layout ──────────────────────────── */}
+      {isMobile && <MobileFooter />}
+
+      {/* ── Desktop: original glass-card footer ────────────────────────── */}
+      <section
+        id="contact"
+        ref={sectionRef}
+        className="contact-section"
+        style={{
+          display: isMobile ? 'none' : 'flex',
+          position: 'relative',
+          minHeight: '60vh',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          padding: '4rem 2rem',
+          borderTop: '1px solid var(--hairline)',
+        }}
+      >
       {/* ── Image background ────────────────────────────────────────────── */}
       <div
         aria-hidden="true"
@@ -448,12 +466,59 @@ export default function Footer() {
       </div>
 
       <style>{`
-        @media (max-width: 640px) {
+        /* ── Mobile: up to 700px ──────────────────────────────────────────── */
+        @media (max-width: 700px) {
           .contact-section {
-            padding: 3rem 1rem !important;
+            padding: 2.5rem 1rem !important;
+            align-items: stretch !important;
+          }
+
+          /* Glass card: full width, smaller radius */
+          .contact-section .glass-strong {
+            max-width: 100% !important;
+            border-radius: 20px !important;
+            padding: 2rem 1.25rem !important;
+          }
+
+          /* CTA buttons: 2-column grid */
+          .contact-section .glass-strong > div:first-of-type > div:first-of-type {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.75rem !important;
+            margin-bottom: 2rem !important;
+          }
+          .contact-section .glass-strong > div:first-of-type > div:first-of-type a,
+          .contact-section .glass-strong > div:first-of-type > div:first-of-type div {
+            justify-content: center !important;
+            border-radius: 14px !important;
+            padding: 0.75rem 0.75rem !important;
+            font-size: 0.8rem !important;
+          }
+
+          /* Phone number row: stack on narrow screens */
+          .contact-section [style*="phoneTel"],
+          .contact-section [aria-label=\"Phone number\"] {
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+          }
+
+          /* Heading */
+          .contact-section h2 {
+            font-size: clamp(1.6rem, 9vw, 2.2rem) !important;
+          }
+        }
+
+        /* ── Very small phones ≤360px ─────────────────────────────────────── */
+        @media (max-width: 360px) {
+          .contact-section .glass-strong {
+            padding: 1.5rem 1rem !important;
+          }
+          .contact-section .glass-strong > div:first-of-type > div:first-of-type {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>
     </section>
+    </>
   );
 }

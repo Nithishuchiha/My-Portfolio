@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import { asset } from '../lib/basepath';
+import MobileAbout from './ui/MobileAbout';
+
 
 // ── Frame sequence config ────────────────────────────────────────────────────
 const ABOUT_PREFIX = '/about/ezgif-frame-';
@@ -32,6 +34,16 @@ export default function About() {
   const rafRef = useRef(null);
 
   const [loaded, setLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // ── Detect mobile (≤700px) ───────────────────────────────────────────────
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 700px)');
+    const handler = (e) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // ── Draw one frame onto the canvas (rAF-batched) ──────────────────────────
   const showFrame = (idx) => {
@@ -166,11 +178,16 @@ export default function About() {
 
 
   return (
-    <section
-      id="about"
-      ref={sectionRef}
-      style={{ position: 'relative', minHeight: '100vh', background: 'var(--bg)' }}
-    >
+    <>
+      {/* ── Mobile: dedicated cosmic sky layout ──────────────────────────── */}
+      {isMobile && <MobileAbout />}
+
+      {/* ── Desktop: original canvas + content (hidden on mobile via CSS) ── */}
+      <section
+        id="about"
+        ref={sectionRef}
+        style={{ position: 'relative', minHeight: '100vh', background: 'var(--bg)', display: isMobile ? 'none' : undefined }}
+      >
       <div
         style={{
           position: 'relative',
@@ -512,29 +529,70 @@ export default function About() {
           50%       { transform: scale(1.5); opacity: 1;   }
         }
 
+        /* ── Mobile: up to 700px ──────────────────────────────────────────── */
         @media (max-width: 700px) {
-          .about-vignette {
-            background: linear-gradient(to right, rgba(11,18,32,0.78) 0%, rgba(11,18,32,0.65) 50%, rgba(11,18,32,0.50) 100%) !important;
+          /* Full-width section */
+          #about > div:first-of-type {
+            width: 100% !important;
+            min-height: 100svh !important;
+            align-items: flex-start !important;
           }
+
+          /* Vignette covers full width on mobile (content is full-screen) */
+          .about-vignette {
+            background: linear-gradient(
+              to bottom,
+              rgba(4,12,30,0.65) 0%,
+              rgba(6,18,48,0.50) 50%,
+              rgba(4,12,30,0.72) 100%
+            ) !important;
+          }
+
+          /* Content block: centered column, full width */
           .about-content {
             margin-left: 0 !important;
             margin-right: 0 !important;
             max-width: 100% !important;
-            padding-left: 1.5rem !important;
-            padding-right: 1.5rem !important;
+            width: 100% !important;
+            padding: 5.5rem 1.25rem 3rem !important;
+            box-sizing: border-box !important;
+          }
+
+          /* Heading size */
+          .about-content h2 {
+            font-size: clamp(2rem, 10vw, 2.8rem) !important;
+          }
+
+          /* Bio paragraph */
+          .about-content p {
+            font-size: 0.92rem !important;
+            line-height: 1.75 !important;
+          }
+
+          /* Skill tag wrapping */
+          .about-content [style*="flexWrap"] {
+            gap: 0.4rem !important;
+          }
+
+          /* Badge row: wrap on very small screens */
+          .about-content [style*="gap: '0.65rem'"],
+          .about-content > div:last-of-type {
+            flex-wrap: wrap !important;
+            gap: 0.5rem !important;
           }
         }
 
-        @media (max-width: 480px) {
+        /* ── Very small phones ≤360px ─────────────────────────────────────── */
+        @media (max-width: 360px) {
           .about-content {
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
+            padding: 5rem 1rem 2.5rem !important;
           }
           .about-content h2 {
-            font-size: clamp(2rem, 11vw, 2.6rem) !important;
+            font-size: clamp(1.8rem, 11vw, 2.2rem) !important;
           }
         }
       `}</style>
     </section>
+    </>
   );
 }

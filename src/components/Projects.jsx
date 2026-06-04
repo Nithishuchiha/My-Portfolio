@@ -4,6 +4,8 @@ import gsap from 'gsap';
 import { categories } from '../data/projects';
 import projectData from '../data/projects';
 import { asset } from '../lib/basepath';
+import MobileProjects from './ui/MobileProjects';
+
 
 // Lazy-load the overlay (kept from old implementation)
 const CardOverlay = lazy(() =>
@@ -260,7 +262,7 @@ export default function Projects() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 480);
+    const check = () => setIsMobile(window.innerWidth <= 700);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -601,11 +603,16 @@ export default function Projects() {
   const cardCount = CATEGORY_CARDS.length;
 
   return (
-    <section
-      id="projects"
-      ref={sectionRef}
-      style={{ position: 'relative', minHeight: '100vh', background: 'var(--bg)', overflow: 'hidden' }}
-    >
+    <>
+      {/* ── Mobile: dedicated cosmic sky layout ──────────────────────────── */}
+      {isMobile && <MobileProjects />}
+
+      {/* ── Desktop: original orbit carousel ────────────────────────────── */}
+      <section
+        id="projects"
+        ref={sectionRef}
+        style={{ position: 'relative', minHeight: '100vh', background: 'var(--bg)', overflow: 'hidden', display: isMobile ? 'none' : undefined }}
+      >
       <div
         style={{
           position: 'relative',
@@ -986,14 +993,43 @@ export default function Projects() {
           50%       { transform: scale(1.5); opacity: 1;   }
         }
 
-        @media (max-width: 640px) {
+        /* ── Mobile: up to 700px ─────────────────────────────────────────── */
+        @media (max-width: 700px) {
+          /* Full-width section wrapper */
+          #projects > div:first-of-type {
+            width: 100% !important;
+            min-height: 100svh !important;
+          }
+
+          /* Heading: centered on mobile */
           .projects-heading {
             left: 50% !important;
             transform: translateX(-50%) !important;
             text-align: center !important;
+            width: calc(100% - 2.5rem) !important;
+            top: clamp(1.5rem, 4vh, 2.5rem) !important;
+          }
+          .projects-heading h2 {
+            font-size: clamp(2rem, 10vw, 2.8rem) !important;
+          }
+
+          /* Mobile card list container */
+          #projects [style*="flexDirection: 'column'"][style*="overflowY"] {
+            padding: 1rem 1rem 3rem !important;
+            max-height: none !important;
+            overflow-y: visible !important;
+            margin-top: clamp(5rem, 14vh, 8rem) !important;
+          }
+        }
+
+        /* ── Very small phones ≤360px ────────────────────────────────────── */
+        @media (max-width: 360px) {
+          .projects-heading h2 {
+            font-size: clamp(1.8rem, 11vw, 2.2rem) !important;
           }
         }
       `}</style>
     </section>
+    </>
   );
 }
