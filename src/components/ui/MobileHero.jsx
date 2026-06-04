@@ -136,7 +136,22 @@ export default function MobileHero() {
   }, []);
 
   return (
-    <div className="mh-root" aria-label="Hero section">
+    <div
+      className="mh-root"
+      id="home"
+      aria-label="Hero section"
+      style={{
+        background: `
+          linear-gradient(180deg,
+            rgba(4,12,30,0.72) 0%,
+            rgba(6,18,48,0.60) 40%,
+            rgba(8,28,72,0.50) 70%,
+            rgba(4,12,30,0.80) 100%
+          ),
+          url(${asset('/hero/background.png')}) center center / cover no-repeat
+        `,
+      }}
+    >
       {/* ── Scanline overlay ─────────────────────────────────────────────── */}
       <div className="mh-scanlines" aria-hidden="true" />
 
@@ -223,10 +238,10 @@ export default function MobileHero() {
 
         {/* ── Tagline ──────────────────────────────────────────────────── */}
         <p className="mh-tagline">
-          I don't just write code —{' '}
-          <strong>I obsess over every detail</strong>{' '}
-          that makes someone stop and think{' '}
-          <em>'wow.'</em>
+          I don't build interfaces —{' '}
+          <strong>I build moments</strong>{' '}
+          that make people{' '}
+          <em>pause.</em>
         </p>
 
         {/* ── Stats row ────────────────────────────────────────────────── */}
@@ -293,14 +308,6 @@ export default function MobileHero() {
           width: 100%;
           min-height: 100dvh;
           overflow: hidden;
-          background:
-            linear-gradient(180deg,
-              rgba(4,12,30,0.72) 0%,
-              rgba(6,18,48,0.60) 40%,
-              rgba(8,28,72,0.50) 70%,
-              rgba(4,12,30,0.80) 100%
-            ),
-            url('/hero/background.png') center center / cover no-repeat;
           display: flex;
           align-items: flex-start;
           justify-content: center;

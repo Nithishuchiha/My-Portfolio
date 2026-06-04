@@ -21,7 +21,7 @@ const SPAWN_THROTTLE_MS  = 20;   // min ms between spawns (≈50 fps of ripples)
 
 export default function WaterCursor() {
   const dotRef      = useRef(null);
-  const poolRef     = useRef([]);   // array of div refs
+  const poolRef     = useRef([]);
   const poolIdxRef  = useRef(0);
   const lastSpawnRef = useRef(0);
 
@@ -30,7 +30,6 @@ export default function WaterCursor() {
     const pool = poolRef.current;
     if (!dot || !pool.length) return;
 
-    // quickTo for the dot — zero-lag snap
     const setDotX = gsap.quickTo(dot, 'x', { duration: 0.04 });
     const setDotY = gsap.quickTo(dot, 'y', { duration: 0.04 });
 
@@ -39,25 +38,19 @@ export default function WaterCursor() {
       if (now - lastSpawnRef.current < SPAWN_THROTTLE_MS) return;
       lastSpawnRef.current = now;
 
-      // Round-robin through the pool
       const el = pool[poolIdxRef.current % POOL_SIZE];
       poolIdxRef.current += 1;
 
-      // Kill any live tween on this element so we can restart it cleanly
       gsap.killTweensOf(el);
 
-      // Snap to position instantly (no transform-origin offset tricks needed
-      // because the element is already centred via translate(-50%,-50%))
       gsap.set(el, {
-        x,
-        y,
+        x, y,
         scale: 0.06,
         opacity: 0.92,
         filter: 'blur(0px)',
         display: 'block',
       });
 
-      // Animate outward — water ripple expanding & blurring away
       gsap.to(el, {
         scale: 1,
         opacity: 0,
@@ -77,7 +70,6 @@ export default function WaterCursor() {
     const onLeave = () => gsap.to(dot, { opacity: 0, duration: 0.3 });
     const onEnter = () => gsap.to(dot, { opacity: 1, duration: 0.3 });
 
-    // Press — dot squish
     const onDown = () => gsap.to(dot, { scale: 0.5, duration: 0.15, ease: 'power2.out' });
     const onUp   = () => gsap.to(dot, { scale: 1,   duration: 0.5,  ease: 'elastic.out(1.4, 0.5)' });
 
@@ -126,12 +118,12 @@ export default function WaterCursor() {
             width: 140,
             height: 140,
             borderRadius: '50%',
-            // Bright water ring + vivid radial fill
-            border: '2px solid rgba(var(--accent-rgb), 0.95)',
+            // Ocean water ring + vivid radial fill
+            border: '2px solid rgba(0, 229, 255, 0.95)',
             background:
-              'radial-gradient(circle, rgba(var(--accent-rgb), 0.40) 0%, rgba(var(--accent-rgb), 0.18) 45%, transparent 75%)',
+              'radial-gradient(circle, rgba(0, 229, 255, 0.40) 0%, rgba(0, 229, 255, 0.18) 45%, transparent 75%)',
             boxShadow:
-              '0 0 28px 10px rgba(var(--accent-rgb), 0.55), inset 0 0 20px 4px rgba(var(--accent-rgb), 0.25)',
+              '0 0 28px 10px rgba(0, 229, 255, 0.55), inset 0 0 20px 4px rgba(0, 229, 255, 0.25)',
           }}
         />
       ))}

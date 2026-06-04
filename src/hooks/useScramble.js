@@ -22,7 +22,7 @@ export default function useScramble(text, active) {
     }
 
     frameRef.current = 0;
-    const TOTAL = 22; // total animation frames
+    const TOTAL = 50; // total animation frames
 
     const tick = () => {
       frameRef.current += 1;

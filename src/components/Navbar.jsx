@@ -79,7 +79,7 @@ export default function Navbar() {
     firePageTransition(() => {
       const el = document.getElementById(id);
       if (el) {
-        const y = el.getBoundingClientRect().top + window.scrollY - 100;
+        const y = el.getBoundingClientRect().top + window.scrollY;
         window.scrollTo({ top: y, behavior: 'auto' });
       }
 

@@ -113,7 +113,7 @@ export default function MobileProjects() {
     const handleClose = useCallback(() => setActiveCategory(null), []);
 
     return (
-        <div className="mpr-root" aria-label="Projects section">
+        <div className="mpr-root" id="projects" aria-label="Projects section">
             {/* ── Ambient orbs ─────────────────────────────────────────────── */}
             <div className="mpr-orb mpr-orb-1" aria-hidden="true" />
             <div className="mpr-orb mpr-orb-2" aria-hidden="true" />

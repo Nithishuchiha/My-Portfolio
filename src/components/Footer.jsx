@@ -83,7 +83,7 @@ export default function Footer() {
         style={{
           display: isMobile ? 'none' : 'flex',
           position: 'relative',
-          minHeight: '60vh',
+          minHeight: '100vh',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',

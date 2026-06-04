@@ -115,7 +115,7 @@ export default function HeroCanvas() {
         setRoleIdx((i) => (i + 1) % ROLES.length);
         setRoleVisible(true);
       }, 400);
-    }, 2800);
+    }, 4500);
     return () => clearInterval(interval);
   }, [status]);
 

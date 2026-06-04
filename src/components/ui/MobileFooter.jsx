@@ -99,7 +99,7 @@ export default function MobileFooter() {
     ];
 
     return (
-        <div className="mft-root" id="contact-mobile" aria-label="Contact section">
+        <div className="mft-root" id="contact" aria-label="Contact section">
             {/* ── Ambient orbs ─────────────────────────────────────────────── */}
             <div className="mft-orb mft-orb-1" aria-hidden="true" />
             <div className="mft-orb mft-orb-2" aria-hidden="true" />
