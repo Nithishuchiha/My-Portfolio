@@ -86,8 +86,7 @@ export default function AccentSwitcher() {
       <style>{`
         @media (max-width: 768px) {
           .accent-switcher {
-            bottom: 5rem !important;
-            right: 1.25rem !important;
+            display: none !important;
           }
         }
       `}</style>

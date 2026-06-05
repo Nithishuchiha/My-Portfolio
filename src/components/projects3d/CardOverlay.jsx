@@ -82,8 +82,8 @@ function ProjectCard({ project, catColor, gradient, signedIdx, isActive, onClick
         zIndex: props.zIndex,
         pointerEvents: props.pointerEvents,
         boxShadow: isActive
-          ? `0 28px 70px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.15), 0 0 36px rgba(${hexToRgb(catColor)},0.18)`
-          : `0 8px 32px rgba(0,0,0,0.18)`,
+          ? `0 28px 70px rgba(0,0,0,0.55), 0 0 0 1px rgba(${hexToRgb(catColor)},0.4), 0 0 48px rgba(${hexToRgb(catColor)},0.22)`
+          : `0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(${hexToRgb(catColor)},0.12)`,
         flexShrink: 0,
         userSelect: 'none',
       }}
@@ -136,20 +136,23 @@ function ProjectCard({ project, catColor, gradient, signedIdx, isActive, onClick
       {/* ── Card body ───────────────────────────────────────────────── */}
       <div style={{
         padding: '18px 20px 20px',
-        background: 'rgba(255,255,255,0.97)',
+        background: `linear-gradient(170deg, rgba(${hexToRgb(catColor)}, 0.06) 0%, rgba(8, 14, 32, 0.97) 28%)`,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
         height: `${CARD_H - 185}px`,
         boxSizing: 'border-box',
         overflow: 'hidden',
+        borderTop: `1px solid rgba(${hexToRgb(catColor)}, 0.15)`,
       }}>
         <h3 style={{
           margin: 0,
           fontFamily: 'Outfit, Inter, sans-serif',
           fontWeight: 800,
           fontSize: '1.08rem',
-          color: '#0B1220',
+          color: '#f0f6ff',
           letterSpacing: '-0.02em',
           lineHeight: 1.25,
           flexShrink: 0,
@@ -161,7 +164,7 @@ function ProjectCard({ project, catColor, gradient, signedIdx, isActive, onClick
           margin: 0,
           fontFamily: 'Inter, sans-serif',
           fontSize: '0.76rem',
-          color: '#42536B',
+          color: 'rgba(180, 200, 230, 0.82)',
           lineHeight: 1.55,
           flexShrink: 0,
           display: '-webkit-box',
@@ -193,13 +196,15 @@ function ProjectCard({ project, catColor, gradient, signedIdx, isActive, onClick
               display: 'flex', alignItems: 'center', gap: '5px',
               padding: '7px 14px',
               borderRadius: '9px',
-              border: `1px solid rgba(${hexToRgb(catColor)}, 0.28)`,
-              background: `rgba(${hexToRgb(catColor)}, 0.06)`,
+              border: `1px solid rgba(${hexToRgb(catColor)}, 0.35)`,
+              background: `rgba(${hexToRgb(catColor)}, 0.10)`,
               color: catColor,
               fontFamily: 'Inter, sans-serif',
               fontSize: '0.72rem',
               fontWeight: 600,
               textDecoration: 'none',
+              boxShadow: `0 0 12px rgba(${hexToRgb(catColor)}, 0.08)`,
+              transition: 'background 0.2s ease, box-shadow 0.2s ease',
             }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
@@ -217,11 +222,12 @@ function ProjectCard({ project, catColor, gradient, signedIdx, isActive, onClick
               padding: '7px 14px',
               borderRadius: '9px',
               background: catColor,
-              color: '#0B1220',
+              color: '#060c1e',
               fontFamily: 'Inter, sans-serif',
               fontSize: '0.72rem',
               fontWeight: 700,
               textDecoration: 'none',
+              boxShadow: `0 0 18px rgba(${hexToRgb(catColor)}, 0.35)`,
             }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -277,7 +283,7 @@ export default function CardOverlay({ category, onClose }) {
           position: 'fixed',
           inset: 0,
           zIndex: 1000,
-          background: 'rgba(246,250,255,0.90)',
+          background: 'rgba(4, 10, 24, 0.88)',
           backdropFilter: 'blur(22px)',
           WebkitBackdropFilter: 'blur(22px)',
         }}
@@ -328,7 +334,8 @@ export default function CardOverlay({ category, onClose }) {
           <h2 style={{
             fontFamily: 'Outfit, Inter, sans-serif',
             fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)',
-            fontWeight: 900, margin: 0, color: '#0B1220', letterSpacing: '-0.03em',
+            fontWeight: 900, margin: 0, color: '#fff', letterSpacing: '-0.03em',
+            textShadow: '0 2px 20px rgba(0,0,0,0.5)',
           }}>
             {projects.length} Project{projects.length !== 1 ? 's' : ''}
           </h2>
@@ -393,7 +400,7 @@ export default function CardOverlay({ category, onClose }) {
                 height: '9px',
                 borderRadius: '999px',
                 border: 'none',
-                background: idx === activeIdx ? catColor : 'rgba(11,18,32,0.18)',
+                background: idx === activeIdx ? catColor : 'rgba(120,160,220,0.22)',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 boxShadow: idx === activeIdx ? `0 0 10px ${catColor}` : 'none',
@@ -412,7 +419,7 @@ export default function CardOverlay({ category, onClose }) {
             marginTop: '0.75rem',
             fontFamily: 'Inter, sans-serif',
             fontSize: '0.68rem',
-            color: 'rgba(11,18,32,0.35)',
+            color: 'rgba(180, 210, 255, 0.35)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             pointerEvents: 'none',
@@ -437,16 +444,16 @@ export default function CardOverlay({ category, onClose }) {
             width: '42px',
             height: '42px',
             borderRadius: '50%',
-            border: '1px solid rgba(11,18,32,0.13)',
-            background: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(120, 160, 220, 0.22)',
+            background: 'rgba(8, 16, 40, 0.75)',
+            backdropFilter: 'blur(14px)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#0B1220',
+            color: 'rgba(200, 220, 255, 0.9)',
             fontSize: '1rem',
-            boxShadow: '0 4px 18px rgba(11,18,32,0.1)',
+            boxShadow: '0 4px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
             pointerEvents: 'auto',
           }}
         >

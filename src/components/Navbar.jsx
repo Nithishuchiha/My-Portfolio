@@ -168,18 +168,21 @@ export default function Navbar() {
           width: '44px',
           height: '44px',
           borderRadius: '14px',
-          border: '1px solid var(--glass-border)',
-          background: 'var(--glass-strong-bg)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          border: mobileOpen
+            ? '1px solid rgba(56,189,248,0.55)'
+            : '1px solid rgba(56,189,248,0.20)',
+          background: 'rgba(4,10,28,0.72)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
           display: 'none',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          color: 'var(--text)',
+          color: mobileOpen ? '#38bdf8' : 'rgba(200,225,255,0.85)',
           transition: 'all 0.3s ease',
-          boxShadow: mobileOpen ? '0 0 20px var(--accent-glow)' : '0 2px 12px rgba(11,18,32,0.10)',
-          borderColor: mobileOpen ? 'var(--accent)' : 'var(--glass-border)',
+          boxShadow: mobileOpen
+            ? '0 0 22px rgba(56,189,248,0.30), inset 0 1px 0 rgba(255,255,255,0.06)'
+            : '0 2px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)',
         }}
       >
         <MenuIcon open={mobileOpen} />
@@ -199,9 +202,9 @@ export default function Navbar() {
                 position: 'fixed',
                 inset: 0,
                 zIndex: 105,
-                background: 'rgba(11,18,32,0.4)',
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
+                background: 'rgba(2,6,20,0.70)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
               }}
             />
             <motion.div
@@ -216,26 +219,39 @@ export default function Navbar() {
                 bottom: 0,
                 width: 'min(280px, 75vw)',
                 zIndex: 106,
-                background: 'var(--glass-strong-bg)',
-                backdropFilter: 'blur(28px)',
-                WebkitBackdropFilter: 'blur(28px)',
-                borderLeft: '1px solid var(--glass-border)',
+                background: 'rgba(4,10,28,0.88)',
+                backdropFilter: 'blur(32px)',
+                WebkitBackdropFilter: 'blur(32px)',
+                borderLeft: '1px solid rgba(56,189,248,0.14)',
                 display: 'flex',
                 flexDirection: 'column',
                 padding: '5.5rem 1.5rem 2rem',
                 gap: '0.35rem',
-                boxShadow: '-8px 0 40px rgba(11,18,32,0.12)',
+                boxShadow: '-8px 0 50px rgba(0,0,0,0.55), 0 0 0 0 transparent',
               }}
             >
-              {/* Accent accent bar */}
+              {/* Cyan top accent bar */}
               <div
                 style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
                   right: 0,
-                  height: '3px',
-                  background: 'linear-gradient(to right, transparent, var(--accent), transparent)',
+                  height: '2px',
+                  background: 'linear-gradient(to right, transparent, #38bdf8, #818cf8, transparent)',
+                  opacity: 0.7,
+                }}
+              />
+
+              {/* Subtle scanlines inside drawer */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  pointerEvents: 'none',
+                  background: 'repeating-linear-gradient(to bottom, transparent, transparent 3px, rgba(0,160,255,0.015) 3px, rgba(0,160,255,0.015) 6px)',
+                  zIndex: 0,
                 }}
               />
 
@@ -249,19 +265,27 @@ export default function Navbar() {
                     transition={{ delay: 0.06 * i, duration: 0.4, ease: 'easeOut' }}
                     onClick={() => scrollTo(item.id)}
                     style={{
+                      position: 'relative',
+                      zIndex: 1,
                       padding: '0.85rem 1.2rem',
                       borderRadius: '14px',
-                      border: isActive ? '1px solid var(--accent)' : '1px solid transparent',
+                      border: isActive
+                        ? '1px solid rgba(56,189,248,0.45)'
+                        : '1px solid rgba(56,189,248,0.08)',
                       cursor: 'pointer',
                       fontFamily: 'var(--font-body)',
                       fontSize: '0.95rem',
                       fontWeight: isActive ? 700 : 500,
                       letterSpacing: '0.03em',
-                      background: isActive ? 'rgba(var(--accent-rgb), 0.10)' : 'transparent',
-                      color: isActive ? 'var(--accent)' : 'var(--text)',
+                      background: isActive
+                        ? 'rgba(56,189,248,0.10)'
+                        : 'rgba(255,255,255,0.025)',
+                      color: isActive ? '#38bdf8' : 'rgba(200,225,255,0.75)',
                       textAlign: 'left',
                       transition: 'all 0.2s ease',
-                      boxShadow: isActive ? '0 0 16px rgba(var(--accent-rgb), 0.12)' : 'none',
+                      boxShadow: isActive
+                        ? '0 0 18px rgba(56,189,248,0.12), inset 0 1px 0 rgba(56,189,248,0.08)'
+                        : 'none',
                     }}
                     whileTap={{ scale: 0.97 }}
                   >
@@ -271,10 +295,11 @@ export default function Navbar() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          background: isActive ? 'var(--accent)' : 'var(--text-dim)',
-                          opacity: isActive ? 1 : 0.35,
+                          background: isActive ? '#38bdf8' : 'rgba(150,180,220,0.4)',
+                          opacity: isActive ? 1 : 0.5,
                           transition: 'all 0.3s ease',
-                          boxShadow: isActive ? '0 0 8px var(--accent-glow)' : 'none',
+                          boxShadow: isActive ? '0 0 8px rgba(56,189,248,0.7)' : 'none',
+                          flexShrink: 0,
                         }}
                       />
                       {item.label}
